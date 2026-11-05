@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No `if` as the only statement in an `if` without `else`. Merge the conditions with `&&`.",
+  "why": "One combined condition reads faster than two nested blocks."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Comments",
+  "summary": "No comments on the same line as code. Let the name say it.",
+  "why": "Comments at the end of a line get missed and go stale. A clear name keeps the meaning in the code."
+}

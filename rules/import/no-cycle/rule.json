@@ -1,0 +1,6 @@
+{
+  "group": "Imports",
+  "summary": "No circular imports between modules.",
+  "why": "Cycles make load order matter, so an import can still be `undefined` when it is first used, and they tie two modules together so neither can change on its own.",
+  "note": "Move what both files need into a third module."
+}

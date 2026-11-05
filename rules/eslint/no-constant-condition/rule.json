@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No conditions that never change, loops such as `while (true)` included.",
+  "why": "A constant condition is either dead code or a loop whose real exit is hidden somewhere in its body."
+}

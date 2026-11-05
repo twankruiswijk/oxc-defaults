@@ -1,0 +1,5 @@
+{
+  "group": "Functions",
+  "summary": "Functions take at most 4 parameters. Pass an object instead.",
+  "why": "Past four parameters, callers mix up the order. With an object, every value is labeled where the function is called."
+}

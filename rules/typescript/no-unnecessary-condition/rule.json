@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No checks the types already prove always true or always false. Needs `--type-aware`.",
+  "why": "A check that can never fail is dead code, and it often means the types or the logic are wrong."
+}

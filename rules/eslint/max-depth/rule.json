@@ -1,0 +1,5 @@
+{
+  "group": "Functions",
+  "summary": "Blocks nest at most 4 deep. Return or `continue` early, or extract a function.",
+  "why": "Every level of nesting is one more condition the reader has to keep in mind."
+}

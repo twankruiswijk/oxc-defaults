@@ -1,0 +1,5 @@
+{
+  "group": "Arrays",
+  "summary": "No `forEach`. Use `for...of`.",
+  "why": "`forEach` does not wait for `await`, and `return` inside it only skips one item. `for...of` handles both and also supports `break`."
+}

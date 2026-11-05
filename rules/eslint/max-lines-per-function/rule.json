@@ -1,0 +1,6 @@
+{
+  "group": "Functions",
+  "summary": "Functions are at most 100 lines, not counting blank lines and comments. Split them into named steps.",
+  "why": "A function that fits on a screen or two can be read in one go, and named steps describe what it does.",
+  "sketch": true
+}

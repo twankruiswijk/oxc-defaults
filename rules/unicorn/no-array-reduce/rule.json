@@ -1,0 +1,6 @@
+{
+  "group": "Arrays",
+  "summary": "No `reduce` or `reduceRight`. Use a loop.",
+  "why": "A loop reads top to bottom. `reduce` makes the reader track the running value and puts its starting value at the end. Typing that value often needs a cast, and copying it on every step is slow.",
+  "note": "A simple sum such as `prices.reduce((sum, price) => sum + price, 0)` is still allowed."
+}

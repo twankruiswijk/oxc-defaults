@@ -1,0 +1,5 @@
+{
+  "group": "Arrays",
+  "summary": "No destructuring that skips several slots.",
+  "why": "Counting commas to see which item you get is easy to get wrong. An index says it directly."
+}

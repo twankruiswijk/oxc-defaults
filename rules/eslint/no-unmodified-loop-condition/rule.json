@@ -1,0 +1,6 @@
+{
+  "group": "Control flow",
+  "summary": "No loop conditions whose variables never change inside the loop.",
+  "why": "If nothing in the loop changes the condition, the loop never stops once it starts. That is almost always a bug.",
+  "note": "The bad version never lowers `remaining`, so it loops forever. Conditions that read a property or call a function, such as `index < items.length`, are not checked."
+}

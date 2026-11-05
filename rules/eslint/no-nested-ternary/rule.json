@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No ternary inside a ternary.",
+  "why": "Nested ternaries make the reader pair up every `?` with its `:` in their head."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Comments",
+  "summary": "No TODO, FIXME, HACK, XXX or TEMP in comments. Fix it now or track it in an issue.",
+  "why": "TODO comments pile up and nobody follows them up. An issue has an owner and shows up in planning."
+}

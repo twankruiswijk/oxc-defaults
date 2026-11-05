@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No `any` type.",
+  "why": "`any` switches off type checking for everything it touches, so mistakes only show up at runtime."
+}

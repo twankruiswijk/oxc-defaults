@@ -1,0 +1,6 @@
+{
+  "group": "Types",
+  "summary": "No `as` casts that claim a narrower type than the value has. Needs `--type-aware`.",
+  "why": "A cast tells the compiler to trust you without checking. If the value has another shape, the code breaks later, far from the cast.",
+  "note": "Check the shape with a type guard instead of asserting it."
+}

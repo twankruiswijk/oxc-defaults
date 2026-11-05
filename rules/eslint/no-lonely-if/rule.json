@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No `if` as the only statement in an `else`. Write `else if`.",
+  "why": "`else if` says the same thing with one level less nesting."
+}

@@ -1,0 +1,6 @@
+{
+  "group": "Functions",
+  "summary": "Functions have at most 15 branches (`if`, loops, `case`, `catch`, ternaries, `&&`, `||`, `??`). Use a lookup or split the function.",
+  "why": "Every branch is another path to read and test. Past 15, a function is usually doing several jobs.",
+  "sketch": true
+}

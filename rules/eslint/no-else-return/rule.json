@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No `else` after an `if` block that returns.",
+  "why": "The `else` adds a level of nesting without adding meaning: the code after the `if` only runs when it did not return."
+}

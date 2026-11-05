@@ -1,0 +1,5 @@
+{
+  "group": "Functions",
+  "summary": "No anonymous `function` expressions. Use an arrow function or give it a name.",
+  "why": "Arrow functions become the one way to write an unnamed function, and they never get their own `this`, so there are no `this` surprises."
+}

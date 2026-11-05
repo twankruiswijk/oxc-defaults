@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "No shorthand type conversion. Spell it out.",
+  "why": "`!!`, `+` and `'' +` hide the conversion. `Number()`, `String()` or a real comparison say what happens."
+}

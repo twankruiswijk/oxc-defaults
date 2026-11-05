@@ -1,0 +1,5 @@
+{
+  "group": "Arrays",
+  "summary": "No immediately called arrow functions whose body is a parenthesized expression.",
+  "why": "The reader has to work out the function and what it is called with before reaching the value. A plain expression says it directly."
+}

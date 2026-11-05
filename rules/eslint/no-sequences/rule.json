@@ -1,0 +1,6 @@
+{
+  "group": "Control flow",
+  "summary": "No comma operator to run several expressions in one statement, parentheses or not.",
+  "why": "The comma operator hides a second statement inside one line and is easy to mistake for an argument list.",
+  "note": "oxfmt wraps every sequence in parentheses, so parentheses are not allowed as a way out. The setup and update parts of a `for` loop, such as `for (let i = 0, n = items.length; i < n; i += 1)`, are still allowed."
+}
