@@ -2,5 +2,7 @@
   "group": "Functions",
   "summary": "Files are at most 400 lines, not counting blank lines and comments. Split them by responsibility.",
   "why": "Big files usually hold several responsibilities, and splitting them keeps each file about one thing. Blank lines do not count, so spacing code into paragraphs is never penalized.",
-  "sketch": true
+  "checkOptions": {
+    "max": 4
+  }
 }

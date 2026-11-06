@@ -3,6 +3,6 @@ const STATUS_LABELS = new Map([
   ['review', 'In review'],
 ]);
 
-function statusLabel(status: string): string {
+export function statusLabel(status: string): string {
   return STATUS_LABELS.get(status) ?? 'Unknown';
 }

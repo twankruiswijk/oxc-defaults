@@ -28,7 +28,8 @@ Add the scripts, replacing `src` with your source folder:
 ## Gotchas
 
 - `--type-aware` needs `oxlint-tsgolint`. Without it, `no-unnecessary-condition` and `no-unsafe-type-assertion` do not run.
-- `--deny-warnings` makes oxlint's built-in checks, which are warnings by default, fail the run too.
+- The config sets oxlint's built-in correctness checks to errors, so they fail the run even without `--deny-warnings`. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
+- In `*.test.ts` and `*.spec.ts` files, `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
 - `plugins` replaces oxlint's default plugin list instead of adding to it. Keep `typescript`, `unicorn` and `oxc` in it, or their rules turn off without any error.
 
 ## Formatting
@@ -42,11 +43,11 @@ Add the scripts, replacing `src` with your source folder:
 2. Add or update its folder `rules/<plugin>/<rule>/`. `rule.json` holds the group, summary and why. `bad.ts` and `good.ts` hold the examples; use `bad/` and `good/` folders when an example needs several files.
 3. Run `pnpm readme` to regenerate the rule list below, then `pnpm check`.
 
-`pnpm check` fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. CI runs it on every push and pull request. Rules marked `"sketch": true` (the size limits) show their examples without linting them.
+`pnpm check` fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. CI runs it on every push and pull request. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
 
 ## Lint rules
 
-Every rule below is an error. On top of these, oxlint runs its built-in correctness checks.
+Every rule below is an error. On top of these, oxlint runs its built-in correctness checks, also as errors.
 
 <!-- rules:start -->
 
@@ -176,6 +177,108 @@ function isUser(value: unknown): value is User {
 export function toUser(value: unknown): User {
   if (!isUser(value)) throw new Error('Not a user');
   return value;
+}
+```
+
+#### `typescript/no-non-null-assertion`
+
+No `!` to claim a value is not `null` or `undefined`.
+
+**Why:** `!` is a cast that skips the check, like `as`. If the value is missing, the code fails later with a vague `cannot read properties of undefined`.
+
+Check for the missing value and handle it, as the good version does.
+
+Bad:
+
+```ts
+interface User {
+  email: string;
+}
+
+export function ownerEmail(users: Map<string, User>, id: string): string {
+  return users.get(id)!.email;
+}
+```
+
+Good:
+
+```ts
+interface User {
+  email: string;
+}
+
+export function ownerEmail(users: Map<string, User>, id: string): string {
+  const user = users.get(id);
+  if (user === undefined) throw new Error(`No user ${id}`);
+  return user.email;
+}
+```
+
+#### `typescript/no-floating-promises`
+
+No promises that are neither awaited nor handled. Needs `--type-aware`.
+
+**Why:** A promise nobody waits for runs in the background: the code after it runs too early, and when it fails, the error is lost.
+
+When fire-and-forget is the intent, write `void persist(draft)` so it is visible.
+
+Bad:
+
+```ts
+declare function persist(draft: Draft): Promise<void>;
+
+export async function saveDraft(draft: Draft): Promise<void> {
+  persist(draft);
+  showToast('Saved');
+}
+```
+
+Good:
+
+```ts
+declare function persist(draft: Draft): Promise<void>;
+
+export async function saveDraft(draft: Draft): Promise<void> {
+  await persist(draft);
+  showToast('Saved');
+}
+```
+
+#### `typescript/switch-exhaustiveness-check`
+
+A `switch` over a union handles every member. Needs `--type-aware`.
+
+**Why:** When someone adds a member to the union, every `switch` that forgets it is flagged, instead of silently falling through at runtime.
+
+Bad:
+
+```ts
+type Status = 'draft' | 'review' | 'published';
+
+export function statusLabel(status: Status): string {
+  switch (status) {
+    case 'draft':
+      return 'Draft';
+    case 'review':
+      return 'In review';
+  }
+}
+```
+
+Good:
+
+```ts
+type Status = 'draft' | 'review' | 'published';
+
+export function statusLabel(status: Status): string {
+  switch (status) {
+    case 'draft':
+      return 'Draft';
+    case 'review':
+      return 'In review';
+    case 'published':
+      return 'Published';
+  }
 }
 ```
 
@@ -525,9 +628,9 @@ loadUser(id, (user) => {
 Good:
 
 ```ts
-const user = await loadUser(id);
-const team = await loadTeam(user);
-const projects = await loadProjects(team);
+export const user = await loadUser(id);
+export const team = await loadTeam(user);
+export const projects = await loadProjects(team);
 ```
 
 #### `eslint/max-params`
@@ -591,7 +694,7 @@ Functions have at most 15 branches (`if`, loops, `case`, `catch`, ternaries, `&&
 Bad:
 
 ```ts
-function statusLabel(status: string): string {
+export function statusLabel(status: string): string {
   switch (status) {
     case 'draft':
       return 'Draft';
@@ -612,7 +715,7 @@ const STATUS_LABELS = new Map([
   ['review', 'In review'],
 ]);
 
-function statusLabel(status: string): string {
+export function statusLabel(status: string): string {
   return STATUS_LABELS.get(status) ?? 'Unknown';
 }
 ```
@@ -626,15 +729,21 @@ Functions are at most 100 lines, not counting blank lines and comments. Split th
 Bad:
 
 ```ts
-async function checkout(cart: Cart): Promise<void> {
-  // 120 lines that validate, price, charge and email
+export async function checkout(cart: Cart): Promise<void> {
+  if (cart.items.length === 0) throw new Error('The cart is empty');
+  let total = 0;
+  for (const item of cart.items) total += item.price * item.quantity;
+  const shipping = total > 5000 ? 0 : 495;
+  await charge(cart.customer, total + shipping);
+  await sendReceipt(cart.customer, total + shipping);
+  // ...and 110 more lines
 }
 ```
 
 Good:
 
 ```ts
-async function checkout(cart: Cart): Promise<void> {
+export async function checkout(cart: Cart): Promise<void> {
   const order = validated(cart);
   const priced = withPrices(order);
   await charge(priced);
@@ -650,16 +759,33 @@ Files are at most 400 lines, not counting blank lines and comments. Split them b
 
 Bad:
 
-```text
-orders.ts                 (650 lines: pricing, shipping and emails)
+```ts
+export const withTax = (cents: number): number => Math.round(cents * 1.21);
+export const discounted = (cents: number, percent: number): number => Math.round(cents * (1 - percent / 100));
+
+export const shippingCost = (cents: number): number => (cents > 5000 ? 0 : 495);
+export const deliveryDays = (express: boolean): number => (express ? 1 : 3);
+
+export const receiptSubject = (orderId: string): string => `Your order ${orderId}`;
+export const shippedSubject = (orderId: string): string => `Order ${orderId} is on its way`;
+
+// ...and 600 more lines of pricing, shipping and emails
 ```
 
 Good:
 
-```text
-orders/pricing.ts         (210 lines)
-orders/shipping.ts        (180 lines)
-orders/emails.ts          (140 lines)
+```ts
+// emails.ts
+export const receiptSubject = (orderId: string): string => `Your order ${orderId}`;
+export const shippedSubject = (orderId: string): string => `Order ${orderId} is on its way`;
+
+// pricing.ts
+export const withTax = (cents: number): number => Math.round(cents * 1.21);
+export const discounted = (cents: number, percent: number): number => Math.round(cents * (1 - percent / 100));
+
+// shipping.ts
+export const shippingCost = (cents: number): number => (cents > 5000 ? 0 : 495);
+export const deliveryDays = (express: boolean): number => (express ? 1 : 3);
 ```
 
 ### Arrays

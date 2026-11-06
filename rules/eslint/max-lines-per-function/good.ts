@@ -1,4 +1,4 @@
-async function checkout(cart: Cart): Promise<void> {
+export async function checkout(cart: Cart): Promise<void> {
   const order = validated(cart);
   const priced = withPrices(order);
   await charge(priced);

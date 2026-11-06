@@ -1,4 +1,4 @@
-function statusLabel(status: string): string {
+export function statusLabel(status: string): string {
   switch (status) {
     case 'draft':
       return 'Draft';

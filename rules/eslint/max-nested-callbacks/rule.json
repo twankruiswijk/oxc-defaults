@@ -2,5 +2,7 @@
   "group": "Functions",
   "summary": "Callbacks nest at most 10 deep. Use `async`/`await` or named functions.",
   "why": "Callback pyramids are hard to follow and hard to handle errors in. `await` reads top to bottom.",
-  "sketch": true
+  "checkOptions": {
+    "max": 2
+  }
 }

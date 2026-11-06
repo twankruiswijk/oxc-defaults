@@ -54,14 +54,17 @@ function unconfiguredRuleFolders(lintConfig: LintConfig): string[] {
 }
 
 function exampleProblems(doc: RuleDoc, lintConfig: LintConfig): string[] {
-  if (doc.sketch) return [];
-
+  const ruleSetting = checkedSetting(lintConfig.rules.get(doc.rule), doc.checkOptions);
   const onlyThisRule = {
     plugins: lintConfig.plugins,
     categories: { correctness: 'off' },
-    rules: { [doc.rule]: lintConfig.rules.get(doc.rule) },
+    rules: { [doc.rule]: ruleSetting },
   };
-  const everyRule = { plugins: lintConfig.plugins, rules: Object.fromEntries(lintConfig.rules) };
+  const everyRule = {
+    plugins: lintConfig.plugins,
+    categories: lintConfig.categories,
+    rules: { ...Object.fromEntries(lintConfig.rules), [doc.rule]: ruleSetting },
+  };
   const problemsFound: string[] = [];
 
   const badRules = rulesFlagging(doc, 'bad', onlyThisRule);
@@ -71,6 +74,15 @@ function exampleProblems(doc: RuleDoc, lintConfig: LintConfig): string[] {
   if (goodRules.length > 0) problemsFound.push(`${doc.rule}: the good example is flagged by ${[...new Set(goodRules)].join(', ')}`);
 
   return problemsFound;
+}
+
+function checkedSetting(setting: unknown, checkOptions: object | undefined): unknown {
+  if (checkOptions === undefined) return setting;
+
+  const [severity, options] = Array.isArray(setting) ? setting : [setting, {}];
+  if (typeof options !== 'object' || options === null) throw new Error('checkOptions needs a rule whose options are an object');
+
+  return [severity, { ...options, ...checkOptions }];
 }
 
 function rulesFlagging(doc: RuleDoc, kind: 'bad' | 'good', lintConfig: object): string[] {

@@ -1,0 +1,6 @@
+{
+  "group": "Types",
+  "summary": "No promises that are neither awaited nor handled. Needs `--type-aware`.",
+  "why": "A promise nobody waits for runs in the background: the code after it runs too early, and when it fails, the error is lost.",
+  "note": "When fire-and-forget is the intent, write `void persist(draft)` so it is visible."
+}

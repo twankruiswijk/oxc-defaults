@@ -3,6 +3,7 @@ import { extname, join } from 'node:path';
 
 export interface LintConfig {
   plugins: unknown;
+  categories: unknown;
   rules: Map<string, unknown>;
 }
 
@@ -17,7 +18,7 @@ export interface RuleDoc {
   summary: string;
   why: string;
   note: string | undefined;
-  sketch: boolean;
+  checkOptions: object | undefined;
   bad: ExampleFile[];
   good: ExampleFile[];
 }
@@ -30,7 +31,9 @@ export function readLintConfig(): LintConfig {
   const parsed: unknown = JSON.parse(readFileSync(join(REPO_ROOT, '.oxlintrc.json'), 'utf8'));
   if (!isLintConfigShape(parsed)) throw new Error('.oxlintrc.json needs "plugins" and "rules"');
 
-  return { plugins: parsed.plugins, rules: new Map(Object.entries(parsed.rules)) };
+  const categories = 'categories' in parsed ? parsed.categories : undefined;
+
+  return { plugins: parsed.plugins, categories, rules: new Map(Object.entries(parsed.rules)) };
 }
 
 export function readRuleDocs(rules: Iterable<string>): RuleDoc[] {
@@ -67,7 +70,7 @@ interface RuleNotes {
   summary: string;
   why: string;
   note?: string;
-  sketch?: boolean;
+  checkOptions?: object;
 }
 
 function readRuleDoc(rule: string): RuleDoc {
@@ -84,7 +87,7 @@ function readRuleDoc(rule: string): RuleDoc {
     summary: notes.summary,
     why: notes.why,
     note: notes.note,
-    sketch: notes.sketch === true,
+    checkOptions: notes.checkOptions,
     bad: readExample(folder, 'bad'),
     good: readExample(folder, 'good'),
   };
@@ -164,7 +167,8 @@ function isRuleNotes(value: unknown): value is RuleNotes {
   const fields = new Map<string, unknown>(Object.entries(value));
   const hasText = (key: string): boolean => typeof fields.get(key) === 'string';
   const noteIsValid = !fields.has('note') || hasText('note');
-  const sketchIsValid = !fields.has('sketch') || typeof fields.get('sketch') === 'boolean';
+  const checkOptions = fields.get('checkOptions');
+  const checkOptionsIsValid = !fields.has('checkOptions') || (typeof checkOptions === 'object' && checkOptions !== null);
 
-  return hasText('group') && hasText('summary') && hasText('why') && noteIsValid && sketchIsValid;
+  return hasText('group') && hasText('summary') && hasText('why') && noteIsValid && checkOptionsIsValid;
 }

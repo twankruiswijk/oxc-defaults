@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "A `switch` over a union handles every member. Needs `--type-aware`.",
+  "why": "When someone adds a member to the union, every `switch` that forgets it is flagged, instead of silently falling through at runtime."
+}

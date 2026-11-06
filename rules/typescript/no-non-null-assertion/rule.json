@@ -1,0 +1,6 @@
+{
+  "group": "Types",
+  "summary": "No `!` to claim a value is not `null` or `undefined`.",
+  "why": "`!` is a cast that skips the check, like `as`. If the value is missing, the code fails later with a vague `cannot read properties of undefined`.",
+  "note": "Check for the missing value and handle it, as the good version does."
+}
