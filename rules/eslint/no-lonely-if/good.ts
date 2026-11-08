@@ -5,5 +5,6 @@ export function shippingLabel(express: boolean, total: number): string {
   } else if (total > 50) {
     label = 'free';
   }
+
   return label;
 }

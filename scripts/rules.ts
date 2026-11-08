@@ -1,9 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { extname, join } from 'node:path';
+import { extname, join, resolve } from 'node:path';
 
 export interface LintConfig {
   plugins: unknown;
   categories: unknown;
+  jsPlugins: string[];
   rules: Map<string, unknown>;
 }
 
@@ -32,8 +33,15 @@ export function readLintConfig(): LintConfig {
   if (!isLintConfigShape(parsed)) throw new Error('.oxlintrc.json needs "plugins" and "rules"');
 
   const categories = 'categories' in parsed ? parsed.categories : undefined;
+  const jsPlugins = 'jsPlugins' in parsed ? parsed.jsPlugins : [];
+  if (!isStringList(jsPlugins)) throw new Error('.oxlintrc.json "jsPlugins" needs to be a list of paths');
 
-  return { plugins: parsed.plugins, categories, rules: new Map(Object.entries(parsed.rules)) };
+  return {
+    plugins: parsed.plugins,
+    categories,
+    jsPlugins: jsPlugins.map((path) => resolve(REPO_ROOT, path)),
+    rules: new Map(Object.entries(parsed.rules)),
+  };
 }
 
 export function readRuleDocs(rules: Iterable<string>): RuleDoc[] {
@@ -159,6 +167,10 @@ function isLintConfigShape(value: unknown): value is { plugins: unknown; rules: 
   if (!('plugins' in value) || !('rules' in value)) return false;
 
   return typeof value.rules === 'object' && value.rules !== null;
+}
+
+function isStringList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 function isRuleNotes(value: unknown): value is RuleNotes {

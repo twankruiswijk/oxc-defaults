@@ -1,0 +1,6 @@
+{
+  "group": "Whitespace",
+  "summary": "A blank line follows a guard clause: an `if` without `else` that returns, throws, continues or breaks. Functions of three lines or fewer are exempt.",
+  "why": "Whitespace is paragraphs. Guards are the first phase of a function, and a blank line after them shows where the checks end and the work starts.",
+  "note": "A guard may sit right before another `if` or a `return`, so a chain like `if (a) return x; if (b) return y; return z;` reads as one paragraph. `oxlint --fix` adds the missing blank lines."
+}

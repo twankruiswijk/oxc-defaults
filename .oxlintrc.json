@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "jsPlugins": ["./plugins/paragraphs.ts"],
   "categories": { "correctness": "error" },
   "rules": {
     "import/no-cycle": "error",
@@ -30,7 +31,10 @@
     "eslint/no-nested-ternary": "error",
     "eslint/complexity": ["error", { "max": 15 }],
     "eslint/max-lines-per-function": ["error", { "max": 100, "skipBlankLines": true, "skipComments": true }],
-    "eslint/max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]
+    "eslint/max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }],
+    "paragraphs/declarations": "error",
+    "paragraphs/guards": "error",
+    "paragraphs/result": "error"
   },
   "overrides": [
     {

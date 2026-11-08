@@ -1,0 +1,6 @@
+{
+  "group": "Whitespace",
+  "summary": "A blank line comes before the final `return` of a function. Functions of three lines or fewer, and a `return` that closes a chain of guard clauses, are exempt.",
+  "why": "Whitespace is paragraphs. The result is the last phase of a function, and setting it apart lets a reader jump straight to what the function gives back.",
+  "note": "`oxlint --fix` adds the missing blank lines."
+}

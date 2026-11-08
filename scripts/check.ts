@@ -57,11 +57,13 @@ function exampleProblems(doc: RuleDoc, lintConfig: LintConfig): string[] {
   const ruleSetting = checkedSetting(lintConfig.rules.get(doc.rule), doc.checkOptions);
   const onlyThisRule = {
     plugins: lintConfig.plugins,
+    jsPlugins: lintConfig.jsPlugins,
     categories: { correctness: 'off' },
     rules: { [doc.rule]: ruleSetting },
   };
   const everyRule = {
     plugins: lintConfig.plugins,
+    jsPlugins: lintConfig.jsPlugins,
     categories: lintConfig.categories,
     rules: { ...Object.fromEntries(lintConfig.rules), [doc.rule]: ruleSetting },
   };
