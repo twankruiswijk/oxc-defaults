@@ -997,7 +997,7 @@ function parseOrders(text: string): Order[] {
 
 #### `paragraphs/guards`
 
-A blank line follows a guard clause: an `if` without `else` that returns, throws, continues or breaks. Functions of three lines or fewer are exempt.
+A blank line follows a guard clause: an `if` without `else` that returns, throws, continues or breaks. Functions of three statements or fewer are exempt.
 
 **Why:** Whitespace is paragraphs. Guards are the first phase of a function, and a blank line after them shows where the checks end and the work starts.
 
@@ -1036,7 +1036,7 @@ export function shippingCents(weightGrams: number, country: string): number {
 
 #### `paragraphs/result`
 
-A blank line comes before the final `return` of a function. Functions of three lines or fewer, and a `return` that closes a chain of guard clauses, are exempt.
+A blank line comes before the final `return` of a function. Functions of three statements or fewer, and a `return` that closes a chain of guard clauses, are exempt.
 
 **Why:** Whitespace is paragraphs. The result is the last phase of a function, and setting it apart lets a reader jump straight to what the function gives back.
 

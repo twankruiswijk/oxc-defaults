@@ -2,7 +2,7 @@ import type { Context, ESTree, Rule } from '@oxlint/plugins';
 
 type Statement = ESTree.Statement | ESTree.Directive | ESTree.ModuleDeclaration;
 
-const SHORT_BODY_LINES = 3;
+const SHORT_BODY_STATEMENTS = 3;
 const FUNCTION_BODY = ':function > BlockStatement';
 const EXIT_TYPES = new Set(['ReturnStatement', 'ThrowStatement', 'ContinueStatement', 'BreakStatement']);
 const BLOCK_DECLARATION_TYPES = new Set([
@@ -170,13 +170,7 @@ function continuesGuards(statement: Statement): boolean {
 }
 
 function isShortBody(body: readonly Statement[]): boolean {
-  const first = body[0];
-  const last = body.at(-1);
-  if (first === undefined || last === undefined) {
-    return true;
-  }
-
-  return last.loc.end.line - first.loc.start.line + 1 <= SHORT_BODY_LINES;
+  return body.length <= SHORT_BODY_STATEMENTS;
 }
 
 function hasBlankLineBetween(context: Context, previous: Statement, next: Statement): boolean {
