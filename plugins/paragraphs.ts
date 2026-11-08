@@ -28,8 +28,12 @@ const declarations: Rule = {
 
         for (const [index, next] of body.entries()) {
           const previous = body[index - 1];
-          if (previous === undefined || !needsSeparation(previous, next)) continue;
-          if (hasBlankLineBetween(context, previous, next)) continue;
+          if (previous === undefined || !needsSeparation(previous, next)) {
+            continue;
+          }
+          if (hasBlankLineBetween(context, previous, next)) {
+            continue;
+          }
 
           reportMissingBlankLine(context, previous, next);
         }
@@ -49,12 +53,18 @@ const guards: Rule = {
     return {
       [FUNCTION_BODY](functionBody: ESTree.BlockStatement) {
         const body: readonly Statement[] = functionBody.body;
-        if (isShortBody(body)) return;
+        if (isShortBody(body)) {
+          return;
+        }
 
         for (const [index, next] of body.entries()) {
           const previous = body[index - 1];
-          if (previous === undefined || !isGuard(previous) || continuesGuards(next)) continue;
-          if (hasBlankLineBetween(context, previous, next)) continue;
+          if (previous === undefined || !isGuard(previous) || continuesGuards(next)) {
+            continue;
+          }
+          if (hasBlankLineBetween(context, previous, next)) {
+            continue;
+          }
 
           reportMissingBlankLine(context, previous, next);
         }
@@ -74,12 +84,18 @@ const result: Rule = {
     return {
       [FUNCTION_BODY](functionBody: ESTree.BlockStatement) {
         const body: readonly Statement[] = functionBody.body;
-        if (isShortBody(body)) return;
+        if (isShortBody(body)) {
+          return;
+        }
 
         const last = body.at(-1);
         const previous = body.at(-2);
-        if (last?.type !== 'ReturnStatement' || previous === undefined || isGuard(previous)) return;
-        if (hasBlankLineBetween(context, previous, last)) return;
+        if (last?.type !== 'ReturnStatement' || previous === undefined || isGuard(previous)) {
+          return;
+        }
+        if (hasBlankLineBetween(context, previous, last)) {
+          return;
+        }
 
         reportMissingBlankLine(context, previous, last);
       },
@@ -93,16 +109,26 @@ export default {
 };
 
 function needsSeparation(previous: Statement, next: Statement): boolean {
-  if (isImport(previous) && isImport(next)) return false;
-  if (isImport(previous) !== isImport(next)) return true;
-  if (isConstant(previous) && isConstant(next)) return false;
+  if (isImport(previous) && isImport(next)) {
+    return false;
+  }
+  if (isImport(previous) !== isImport(next)) {
+    return true;
+  }
+  if (isConstant(previous) && isConstant(next)) {
+    return false;
+  }
 
   return isBlockDeclaration(previous) || isBlockDeclaration(next) || spansLines(previous) || spansLines(next);
 }
 
 function isImport(statement: Statement): boolean {
-  if (statement.type === 'ExportAllDeclaration') return true;
-  if (statement.type === 'ExportNamedDeclaration') return statement.source !== null;
+  if (statement.type === 'ExportAllDeclaration') {
+    return true;
+  }
+  if (statement.type === 'ExportNamedDeclaration') {
+    return statement.source !== null;
+  }
 
   return statement.type === 'ImportDeclaration' || statement.type === 'TSImportEqualsDeclaration';
 }
@@ -117,7 +143,9 @@ function isBlockDeclaration(statement: Statement): boolean {
 
 function unwrapExport(statement: Statement): { type: string } {
   const isExport = statement.type === 'ExportNamedDeclaration' || statement.type === 'ExportDefaultDeclaration';
-  if (isExport) return statement.declaration ?? statement;
+  if (isExport) {
+    return statement.declaration ?? statement;
+  }
 
   return statement;
 }
@@ -127,7 +155,9 @@ function spansLines(statement: Statement): boolean {
 }
 
 function isGuard(statement: Statement): boolean {
-  if (statement.type !== 'IfStatement' || statement.alternate !== null) return false;
+  if (statement.type !== 'IfStatement' || statement.alternate !== null) {
+    return false;
+  }
 
   const consequent = statement.consequent;
   const exit = consequent.type === 'BlockStatement' ? consequent.body.at(-1) : consequent;
@@ -142,7 +172,9 @@ function continuesGuards(statement: Statement): boolean {
 function isShortBody(body: readonly Statement[]): boolean {
   const first = body[0];
   const last = body.at(-1);
-  if (first === undefined || last === undefined) return true;
+  if (first === undefined || last === undefined) {
+    return true;
+  }
 
   return last.loc.end.line - first.loc.start.line + 1 <= SHORT_BODY_LINES;
 }

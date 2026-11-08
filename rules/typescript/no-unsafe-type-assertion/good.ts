@@ -7,6 +7,8 @@ function isUser(value: unknown): value is User {
 }
 
 export function toUser(value: unknown): User {
-  if (!isUser(value)) throw new Error('Not a user');
+  if (!isUser(value)) {
+    throw new Error('Not a user');
+  }
   return value;
 }

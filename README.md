@@ -181,7 +181,9 @@ function isUser(value: unknown): value is User {
 }
 
 export function toUser(value: unknown): User {
-  if (!isUser(value)) throw new Error('Not a user');
+  if (!isUser(value)) {
+    throw new Error('Not a user');
+  }
   return value;
 }
 ```
@@ -215,7 +217,9 @@ interface User {
 
 export function ownerEmail(users: Map<string, User>, id: string): string {
   const user = users.get(id);
-  if (user === undefined) throw new Error(`No user ${id}`);
+  if (user === undefined) {
+    throw new Error(`No user ${id}`);
+  }
   return user.email;
 }
 ```
@@ -357,6 +361,34 @@ export function shippingLabel(express: boolean, total: number): string {
 }
 ```
 
+#### `eslint/curly`
+
+Every `if`, `else`, `for`, `while` and `do` body is a block with braces.
+
+**Why:** One shape for every branch: adding a second statement never silently falls outside the condition.
+
+Bad:
+
+```ts
+export function shippingCost(weightGrams: number): number {
+  if (weightGrams <= 0) throw new Error('weight must be positive');
+
+  return weightGrams * 0.01;
+}
+```
+
+Good:
+
+```ts
+export function shippingCost(weightGrams: number): number {
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
+
+  return weightGrams * 0.01;
+}
+```
+
 #### `unicorn/no-lonely-if`
 
 No `if` as the only statement in an `if` without `else`. Merge the conditions with `&&`.
@@ -397,7 +429,9 @@ Bad:
 export function drain(queue: string[]): void {
   while (true) {
     const job = queue.shift();
-    if (job === undefined) break;
+    if (job === undefined) {
+      break;
+    }
     run(job);
   }
 }
@@ -515,8 +549,12 @@ Good:
 
 ```ts
 export function size(count: number): string {
-  if (count > 100) return 'large';
-  if (count > 10) return 'medium';
+  if (count > 100) {
+    return 'large';
+  }
+  if (count > 10) {
+    return 'medium';
+  }
   return 'small';
 }
 ```
@@ -597,7 +635,9 @@ Good:
 ```ts
 export function syncAll(accounts: Account[]): void {
   for (const account of accounts) {
-    if (!account.active) continue;
+    if (!account.active) {
+      continue;
+    }
 
     try {
       syncOpenInvoices(account);
@@ -609,7 +649,9 @@ export function syncAll(accounts: Account[]): void {
 
 function syncOpenInvoices(account: Account): void {
   for (const invoice of account.invoices) {
-    if (invoice.open) sync(invoice);
+    if (invoice.open) {
+      sync(invoice);
+    }
   }
 }
 ```
@@ -737,9 +779,13 @@ Bad:
 
 ```ts
 export async function checkout(cart: Cart): Promise<void> {
-  if (cart.items.length === 0) throw new Error('The cart is empty');
+  if (cart.items.length === 0) {
+    throw new Error('The cart is empty');
+  }
   let total = 0;
-  for (const item of cart.items) total += item.price * item.quantity;
+  for (const item of cart.items) {
+    total += item.price * item.quantity;
+  }
   const shipping = total > 5000 ? 0 : 495;
   await charge(cart.customer, total + shipping);
   await sendReceipt(cart.customer, total + shipping);
@@ -961,7 +1007,9 @@ Bad:
 
 ```ts
 export function shippingCents(weightGrams: number, country: string): number {
-  if (weightGrams <= 0) throw new Error('weight must be positive');
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
   const base = country === 'NL' ? 495 : 1295;
   const perKilo = Math.ceil(weightGrams / 1000) * 150;
   console.log(`shipping to ${country}`);
@@ -974,7 +1022,9 @@ Good:
 
 ```ts
 export function shippingCents(weightGrams: number, country: string): number {
-  if (weightGrams <= 0) throw new Error('weight must be positive');
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
 
   const base = country === 'NL' ? 495 : 1295;
   const perKilo = Math.ceil(weightGrams / 1000) * 150;
@@ -997,7 +1047,9 @@ Bad:
 ```ts
 export function invoiceTotal(lineCents: number[], vatRate: number): number {
   let subtotal = 0;
-  for (const cents of lineCents) subtotal += cents;
+  for (const cents of lineCents) {
+    subtotal += cents;
+  }
   const vat = Math.round(subtotal * vatRate);
   return subtotal + vat;
 }
@@ -1008,15 +1060,21 @@ Good:
 ```ts
 export function invoiceTotal(lineCents: number[], vatRate: number): number {
   let subtotal = 0;
-  for (const cents of lineCents) subtotal += cents;
+  for (const cents of lineCents) {
+    subtotal += cents;
+  }
   const vat = Math.round(subtotal * vatRate);
 
   return subtotal + vat;
 }
 
 export function discountCents(cents: number, code: string): number {
-  if (code === 'HALF') return cents / 2;
-  if (code === 'TENOFF') return cents - 1000;
+  if (code === 'HALF') {
+    return cents / 2;
+  }
+  if (code === 'TENOFF') {
+    return cents - 1000;
+  }
   return cents;
 }
 ```

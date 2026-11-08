@@ -1,6 +1,8 @@
 export function syncAll(accounts: Account[]): void {
   for (const account of accounts) {
-    if (!account.active) continue;
+    if (!account.active) {
+      continue;
+    }
 
     try {
       syncOpenInvoices(account);
@@ -12,6 +14,8 @@ export function syncAll(accounts: Account[]): void {
 
 function syncOpenInvoices(account: Account): void {
   for (const invoice of account.invoices) {
-    if (invoice.open) sync(invoice);
+    if (invoice.open) {
+      sync(invoice);
+    }
   }
 }

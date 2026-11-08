@@ -13,6 +13,7 @@
     "typescript/switch-exhaustiveness-check": "error",
     "eslint/no-else-return": "error",
     "eslint/no-lonely-if": "error",
+    "eslint/curly": ["error", "all"],
     "unicorn/no-lonely-if": "error",
     "eslint/no-warning-comments": ["error", { "terms": ["todo", "fixme", "hack", "xxx", "temp"], "location": "anywhere" }],
     "eslint/no-constant-condition": ["error", { "checkLoops": "all" }],
