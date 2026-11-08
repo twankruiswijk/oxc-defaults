@@ -118,6 +118,9 @@ function needsSeparation(previous: Statement, next: Statement): boolean {
   if (isConstant(previous) && isConstant(next)) {
     return false;
   }
+  if (isOverload(previous, next)) {
+    return false;
+  }
 
   return isBlockDeclaration(previous) || isBlockDeclaration(next) || spansLines(previous) || spansLines(next);
 }
@@ -141,7 +144,20 @@ function isBlockDeclaration(statement: Statement): boolean {
   return BLOCK_DECLARATION_TYPES.has(unwrapExport(statement).type);
 }
 
-function unwrapExport(statement: Statement): { type: string } {
+function isOverload(previous: Statement, next: Statement): boolean {
+  const signature = unwrapExport(previous);
+  const following = unwrapExport(next);
+  if (signature.type !== 'TSDeclareFunction') {
+    return false;
+  }
+  if (following.type !== 'TSDeclareFunction' && following.type !== 'FunctionDeclaration') {
+    return false;
+  }
+
+  return signature.id !== null && signature.id.name === following.id?.name;
+}
+
+function unwrapExport(statement: Statement) {
   const isExport = statement.type === 'ExportNamedDeclaration' || statement.type === 'ExportDefaultDeclaration';
   if (isExport) {
     return statement.declaration ?? statement;
@@ -180,11 +196,30 @@ function hasBlankLineBetween(context: Context, previous: Statement, next: Statem
 }
 
 function reportMissingBlankLine(context: Context, previous: Statement, next: Statement): void {
+  const text = context.sourceCode.text;
+  const lineBreak = text.includes('\r\n') ? '\r\n' : '\n';
   const end = previous.range[1];
 
   context.report({
     node: next,
     messageId: 'blankLine',
-    fix: (fixer) => fixer.insertTextAfterRange([end, end], '\n'),
+    fix: (fixer) => {
+      if (previous.loc.end.line !== next.loc.start.line) {
+        const trailing = context.sourceCode
+          .getCommentsAfter(previous)
+          .filter((comment) => comment.loc.start.line === previous.loc.end.line);
+        const anchor = trailing.at(-1)?.range[1] ?? end;
+        const lineEnd = text.slice(anchor).search(/\r?\n/) + anchor;
+
+        return fixer.insertTextBeforeRange([lineEnd, lineEnd], lineBreak);
+      }
+      if (text.slice(end, next.range[0]).trim() !== '') {
+        return null;
+      }
+
+      const indent = /^\s*/.exec(context.sourceCode.lines[previous.loc.start.line - 1] ?? '')?.[0] ?? '';
+
+      return fixer.replaceTextRange([end, next.range[0]], lineBreak + lineBreak + indent);
+    },
   });
 }

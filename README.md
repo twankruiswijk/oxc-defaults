@@ -950,7 +950,7 @@ export const name = currentUser ? currentUser.name : 'guest';
 
 #### `paragraphs/declarations`
 
-A blank line separates top-level declarations: after the imports, and around every function, class, interface, enum and multi-line statement. One-line constants and type aliases may sit together.
+A blank line separates top-level declarations: after the imports, and around every function, class, interface, enum and multi-line statement. Constants (even multi-line ones), one-line type aliases and overload signatures may sit together.
 
 **Why:** Whitespace is paragraphs. A file reads like a chapter when each declaration stands on its own, and a wall of code with no blank lines hides where one thing ends and the next begins.
 
