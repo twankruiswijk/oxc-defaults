@@ -24,7 +24,7 @@ const declarations: Rule = {
   create(context) {
     return {
       Program(program) {
-        const body: readonly Statement[] = program.body;
+        const body = withoutEmptyStatements(program.body);
 
         for (const [index, next] of body.entries()) {
           const previous = body[index - 1];
@@ -52,7 +52,7 @@ const guards: Rule = {
   create(context) {
     return {
       [FUNCTION_BODY](functionBody: ESTree.BlockStatement) {
-        const body: readonly Statement[] = functionBody.body;
+        const body = withoutEmptyStatements(functionBody.body);
         if (isShortBody(body)) {
           return;
         }
@@ -83,7 +83,7 @@ const result: Rule = {
   create(context) {
     return {
       [FUNCTION_BODY](functionBody: ESTree.BlockStatement) {
-        const body: readonly Statement[] = functionBody.body;
+        const body = withoutEmptyStatements(functionBody.body);
         if (isShortBody(body)) {
           return;
         }
@@ -222,4 +222,8 @@ function reportMissingBlankLine(context: Context, previous: Statement, next: Sta
       return fixer.replaceTextRange([end, next.range[0]], lineBreak + lineBreak + indent);
     },
   });
+}
+
+function withoutEmptyStatements(body: readonly Statement[]): Statement[] {
+  return body.filter((statement) => statement.type !== 'EmptyStatement');
 }
