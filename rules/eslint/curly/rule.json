@@ -1,0 +1,5 @@
+{
+  "group": "Control flow",
+  "summary": "Every `if`, `else`, `for`, `while` and `do` body is a block with braces.",
+  "why": "One shape for every branch: adding a second statement never silently falls outside the condition."
+}

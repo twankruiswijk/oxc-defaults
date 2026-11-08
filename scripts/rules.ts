@@ -1,9 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { extname, join } from 'node:path';
+import { extname, join, resolve } from 'node:path';
 
 export interface LintConfig {
   plugins: unknown;
   categories: unknown;
+  jsPlugins: string[];
   rules: Map<string, unknown>;
 }
 
@@ -29,11 +30,22 @@ export const README_PATH = join(REPO_ROOT, 'README.md');
 
 export function readLintConfig(): LintConfig {
   const parsed: unknown = JSON.parse(readFileSync(join(REPO_ROOT, '.oxlintrc.json'), 'utf8'));
-  if (!isLintConfigShape(parsed)) throw new Error('.oxlintrc.json needs "plugins" and "rules"');
+  if (!isLintConfigShape(parsed)) {
+    throw new Error('.oxlintrc.json needs "plugins" and "rules"');
+  }
 
   const categories = 'categories' in parsed ? parsed.categories : undefined;
+  const jsPlugins = 'jsPlugins' in parsed ? parsed.jsPlugins : [];
+  if (!isStringList(jsPlugins)) {
+    throw new Error('.oxlintrc.json "jsPlugins" needs to be a list of paths');
+  }
 
-  return { plugins: parsed.plugins, categories, rules: new Map(Object.entries(parsed.rules)) };
+  return {
+    plugins: parsed.plugins,
+    categories,
+    jsPlugins: jsPlugins.map((path) => resolve(REPO_ROOT, path)),
+    rules: new Map(Object.entries(parsed.rules)),
+  };
 }
 
 export function readRuleDocs(rules: Iterable<string>): RuleDoc[] {
@@ -44,7 +56,9 @@ export function expectedReadme(docs: readonly RuleDoc[]): string {
   const readme = readFileSync(README_PATH, 'utf8');
   const start = readme.indexOf(RULES_START);
   const end = readme.indexOf(RULES_END);
-  if (start === -1 || end === -1) throw new Error(`README.md needs ${RULES_START} and ${RULES_END}`);
+  if (start === -1 || end === -1) {
+    throw new Error(`README.md needs ${RULES_START} and ${RULES_END}`);
+  }
 
   const before = readme.slice(0, start + RULES_START.length);
   const after = readme.slice(end);
@@ -76,10 +90,14 @@ interface RuleNotes {
 function readRuleDoc(rule: string): RuleDoc {
   const folder = join(RULES_DIR, rule);
   const notesPath = join(folder, 'rule.json');
-  if (!existsSync(notesPath)) throw new Error(`${rule} is set in .oxlintrc.json but has no rules/${rule}/rule.json`);
+  if (!existsSync(notesPath)) {
+    throw new Error(`${rule} is set in .oxlintrc.json but has no rules/${rule}/rule.json`);
+  }
 
   const notes: unknown = JSON.parse(readFileSync(notesPath, 'utf8'));
-  if (!isRuleNotes(notes)) throw new Error(`rules/${rule}/rule.json needs "group", "summary" and "why" strings`);
+  if (!isRuleNotes(notes)) {
+    throw new Error(`rules/${rule}/rule.json needs "group", "summary" and "why" strings`);
+  }
 
   return {
     rule,
@@ -95,10 +113,14 @@ function readRuleDoc(rule: string): RuleDoc {
 
 function readExample(folder: string, kind: 'bad' | 'good'): ExampleFile[] {
   const exampleFolder = join(folder, kind);
-  if (existsSync(exampleFolder)) return readExampleFolder(exampleFolder);
+  if (existsSync(exampleFolder)) {
+    return readExampleFolder(exampleFolder);
+  }
 
   const fileName = readdirSync(folder).find((name) => name.startsWith(`${kind}.`));
-  if (fileName === undefined) throw new Error(`${folder} has no ${kind} example`);
+  if (fileName === undefined) {
+    throw new Error(`${folder} has no ${kind} example`);
+  }
 
   return [{ name: fileName, code: readFileSync(join(folder, fileName), 'utf8') }];
 }
@@ -116,7 +138,9 @@ function renderRulesSection(docs: readonly RuleDoc[]): string {
 
   for (const [group, groupDocs] of groupedInOrder(docs)) {
     sections.push(`### ${group}`);
-    for (const doc of groupDocs) sections.push(renderRule(doc));
+    for (const doc of groupDocs) {
+      sections.push(renderRule(doc));
+    }
   }
 
   return sections.join('\n\n');
@@ -136,7 +160,9 @@ function groupedInOrder(docs: readonly RuleDoc[]): Map<string, RuleDoc[]> {
 
 function renderRule(doc: RuleDoc): string {
   const lines = [`#### \`${doc.rule}\``, '', doc.summary, '', `**Why:** ${doc.why}`];
-  if (doc.note !== undefined) lines.push('', doc.note);
+  if (doc.note !== undefined) {
+    lines.push('', doc.note);
+  }
   lines.push('', 'Bad:', '', codeBlock(doc.bad), '', 'Good:', '', codeBlock(doc.good));
 
   return lines.join('\n');
@@ -155,14 +181,24 @@ function withFileName(file: ExampleFile): string {
 }
 
 function isLintConfigShape(value: unknown): value is { plugins: unknown; rules: object } {
-  if (typeof value !== 'object' || value === null) return false;
-  if (!('plugins' in value) || !('rules' in value)) return false;
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  if (!('plugins' in value) || !('rules' in value)) {
+    return false;
+  }
 
   return typeof value.rules === 'object' && value.rules !== null;
 }
 
+function isStringList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
 function isRuleNotes(value: unknown): value is RuleNotes {
-  if (typeof value !== 'object' || value === null) return false;
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
 
   const fields = new Map<string, unknown>(Object.entries(value));
   const hasText = (key: string): boolean => typeof fields.get(key) === 'string';

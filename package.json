@@ -4,14 +4,15 @@
   "type": "module",
   "packageManager": "pnpm@12.16.1",
   "scripts": {
-    "lint": "oxlint --type-aware --deny-warnings scripts",
-    "fmt": "oxfmt scripts rules",
-    "fmt:check": "oxfmt --check scripts rules",
+    "lint": "oxlint --type-aware --deny-warnings scripts plugins",
+    "fmt": "oxfmt scripts plugins rules",
+    "fmt:check": "oxfmt --check scripts plugins rules",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "readme": "node scripts/readme.ts",
     "check": "node scripts/check.ts"
   },
   "devDependencies": {
+    "@oxlint/plugins": "^1.92.0",
     "@types/node": "^26.6.6",
     "oxfmt": "^0.76.0",
     "oxlint": "^1.91.0",

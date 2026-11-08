@@ -7,5 +7,6 @@ export function byId(users: User[]): Map<string, User> {
   for (const user of users) {
     lookup.set(user.id, user);
   }
+
   return lookup;
 }

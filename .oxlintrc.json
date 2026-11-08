@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "jsPlugins": ["./plugins/paragraphs.ts"],
   "categories": { "correctness": "error" },
   "rules": {
     "import/no-cycle": "error",
@@ -12,6 +13,7 @@
     "typescript/switch-exhaustiveness-check": "error",
     "eslint/no-else-return": "error",
     "eslint/no-lonely-if": "error",
+    "eslint/curly": ["error", "all"],
     "unicorn/no-lonely-if": "error",
     "eslint/no-warning-comments": ["error", { "terms": ["todo", "fixme", "hack", "xxx", "temp"], "location": "anywhere" }],
     "eslint/no-constant-condition": ["error", { "checkLoops": "all" }],
@@ -30,7 +32,10 @@
     "eslint/no-nested-ternary": "error",
     "eslint/complexity": ["error", { "max": 15 }],
     "eslint/max-lines-per-function": ["error", { "max": 100, "skipBlankLines": true, "skipComments": true }],
-    "eslint/max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]
+    "eslint/max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }],
+    "paragraphs/declarations": "error",
+    "paragraphs/guards": "error",
+    "paragraphs/result": "error"
   },
   "overrides": [
     {

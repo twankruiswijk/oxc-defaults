@@ -9,7 +9,10 @@ Download both configs into your project root:
 ```sh
 curl -fsSLO https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/.oxlintrc.json
 curl -fsSLO https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/.oxfmtrc.json
+curl -fsSL --create-dirs -o plugins/paragraphs.ts https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/plugins/paragraphs.ts
 ```
+
+The third file is the oxlint plugin behind the `paragraphs/*` whitespace rules. `.oxlintrc.json` loads it from `./plugins/paragraphs.ts`.
 
 Install the tools:
 
@@ -30,12 +33,15 @@ Add the scripts, replacing `src` with your source folder:
 - `--type-aware` needs `oxlint-tsgolint`. Without it, `no-unnecessary-condition` and `no-unsafe-type-assertion` do not run.
 - The config sets oxlint's built-in correctness checks to errors, so they fail the run even without `--deny-warnings`. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
 - In `*.test.ts` and `*.spec.ts` files, `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
+- The `paragraphs/*` rules come from `plugins/paragraphs.ts`, an oxlint JS plugin. oxlint has no built-in rule for blank lines between statements, and oxfmt keeps the blank lines you write but never adds one. The plugin runs on Node 22.18 or newer, since it is TypeScript. JS plugins are still alpha in oxlint, so pin the oxlint version. `oxlint --fix` adds every missing blank line these rules report.
+- The plugin only imports types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
 - `plugins` replaces oxlint's default plugin list instead of adding to it. Keep `typescript`, `unicorn` and `oxc` in it, or their rules turn off without any error.
 
 ## Formatting
 
 - `printWidth: 140`: lines wrap after 140 characters.
 - `singleQuote: true`: strings use single quotes, so `const greeting = "hello";` becomes `const greeting = 'hello';`.
+- oxfmt keeps a single blank line where you put one and collapses several into one. Where blank lines are required is up to the `paragraphs/*` lint rules below.
 
 ## Changing a rule
 
@@ -175,7 +181,9 @@ function isUser(value: unknown): value is User {
 }
 
 export function toUser(value: unknown): User {
-  if (!isUser(value)) throw new Error('Not a user');
+  if (!isUser(value)) {
+    throw new Error('Not a user');
+  }
   return value;
 }
 ```
@@ -209,7 +217,9 @@ interface User {
 
 export function ownerEmail(users: Map<string, User>, id: string): string {
   const user = users.get(id);
-  if (user === undefined) throw new Error(`No user ${id}`);
+  if (user === undefined) {
+    throw new Error(`No user ${id}`);
+  }
   return user.email;
 }
 ```
@@ -346,7 +356,36 @@ export function shippingLabel(express: boolean, total: number): string {
   } else if (total > 50) {
     label = 'free';
   }
+
   return label;
+}
+```
+
+#### `eslint/curly`
+
+Every `if`, `else`, `for`, `while` and `do` body is a block with braces.
+
+**Why:** One shape for every branch: adding a second statement never silently falls outside the condition.
+
+Bad:
+
+```ts
+export function shippingCost(weightGrams: number): number {
+  if (weightGrams <= 0) throw new Error('weight must be positive');
+
+  return weightGrams * 0.01;
+}
+```
+
+Good:
+
+```ts
+export function shippingCost(weightGrams: number): number {
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
+
+  return weightGrams * 0.01;
 }
 ```
 
@@ -390,7 +429,9 @@ Bad:
 export function drain(queue: string[]): void {
   while (true) {
     const job = queue.shift();
-    if (job === undefined) break;
+    if (job === undefined) {
+      break;
+    }
     run(job);
   }
 }
@@ -508,8 +549,12 @@ Good:
 
 ```ts
 export function size(count: number): string {
-  if (count > 100) return 'large';
-  if (count > 10) return 'medium';
+  if (count > 100) {
+    return 'large';
+  }
+  if (count > 10) {
+    return 'medium';
+  }
   return 'small';
 }
 ```
@@ -590,7 +635,9 @@ Good:
 ```ts
 export function syncAll(accounts: Account[]): void {
   for (const account of accounts) {
-    if (!account.active) continue;
+    if (!account.active) {
+      continue;
+    }
 
     try {
       syncOpenInvoices(account);
@@ -602,7 +649,9 @@ export function syncAll(accounts: Account[]): void {
 
 function syncOpenInvoices(account: Account): void {
   for (const invoice of account.invoices) {
-    if (invoice.open) sync(invoice);
+    if (invoice.open) {
+      sync(invoice);
+    }
   }
 }
 ```
@@ -730,9 +779,13 @@ Bad:
 
 ```ts
 export async function checkout(cart: Cart): Promise<void> {
-  if (cart.items.length === 0) throw new Error('The cart is empty');
+  if (cart.items.length === 0) {
+    throw new Error('The cart is empty');
+  }
   let total = 0;
-  for (const item of cart.items) total += item.price * item.quantity;
+  for (const item of cart.items) {
+    total += item.price * item.quantity;
+  }
   const shipping = total > 5000 ? 0 : 495;
   await charge(cart.customer, total + shipping);
   await sendReceipt(cart.customer, total + shipping);
@@ -822,6 +875,7 @@ export function byId(users: User[]): Map<string, User> {
   for (const user of users) {
     lookup.set(user.id, user);
   }
+
   return lookup;
 }
 ```
@@ -890,6 +944,139 @@ Good:
 
 ```ts
 export const name = currentUser ? currentUser.name : 'guest';
+```
+
+### Whitespace
+
+#### `paragraphs/declarations`
+
+A blank line separates top-level declarations: after the imports, and around every function, class, interface, enum and multi-line statement. Constants (even multi-line ones), one-line type aliases and overload signatures may sit together.
+
+**Why:** Whitespace is paragraphs. A file reads like a chapter when each declaration stands on its own, and a wall of code with no blank lines hides where one thing ends and the next begins.
+
+Imports and re-exports such as `export { a } from './a'` stay grouped, and so do constants, even when one of them spans several lines. `oxlint --fix` adds the missing blank lines.
+
+Bad:
+
+```ts
+import { readFileSync } from 'node:fs';
+const ENCODING = 'utf8';
+export interface Order {
+  id: string;
+  cents: number;
+}
+export function readOrders(path: string): Order[] {
+  return parseOrders(readFileSync(path, ENCODING));
+}
+function parseOrders(text: string): Order[] {
+  return text.split('\n').map((line) => ({ id: line, cents: 0 }));
+}
+```
+
+Good:
+
+```ts
+import { readFileSync } from 'node:fs';
+
+const ENCODING = 'utf8';
+const SEPARATOR = '\n';
+
+export interface Order {
+  id: string;
+  cents: number;
+}
+
+export function readOrders(path: string): Order[] {
+  return parseOrders(readFileSync(path, ENCODING));
+}
+
+function parseOrders(text: string): Order[] {
+  return text.split(SEPARATOR).map((line) => ({ id: line, cents: 0 }));
+}
+```
+
+#### `paragraphs/guards`
+
+A blank line follows a guard clause: an `if` without `else` that returns, throws, continues or breaks. Functions of three statements or fewer are exempt.
+
+**Why:** Whitespace is paragraphs. Guards are the first phase of a function, and a blank line after them shows where the checks end and the work starts.
+
+A guard may sit right before another `if` or a `return`, so a chain like `if (a) return x; if (b) return y; return z;` reads as one paragraph. `oxlint --fix` adds the missing blank lines.
+
+Bad:
+
+```ts
+export function shippingCents(weightGrams: number, country: string): number {
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
+  const base = country === 'NL' ? 495 : 1295;
+  const perKilo = Math.ceil(weightGrams / 1000) * 150;
+  console.log(`shipping to ${country}`);
+
+  return base + perKilo;
+}
+```
+
+Good:
+
+```ts
+export function shippingCents(weightGrams: number, country: string): number {
+  if (weightGrams <= 0) {
+    throw new Error('weight must be positive');
+  }
+
+  const base = country === 'NL' ? 495 : 1295;
+  const perKilo = Math.ceil(weightGrams / 1000) * 150;
+  console.log(`shipping to ${country}`);
+
+  return base + perKilo;
+}
+```
+
+#### `paragraphs/result`
+
+A blank line comes before the final `return` of a function. Functions of three statements or fewer, and a `return` that closes a chain of guard clauses, are exempt.
+
+**Why:** Whitespace is paragraphs. The result is the last phase of a function, and setting it apart lets a reader jump straight to what the function gives back.
+
+`oxlint --fix` adds the missing blank lines.
+
+Bad:
+
+```ts
+export function invoiceTotal(lineCents: number[], vatRate: number): number {
+  let subtotal = 0;
+  for (const cents of lineCents) {
+    subtotal += cents;
+  }
+  const vat = Math.round(subtotal * vatRate);
+  return subtotal + vat;
+}
+```
+
+Good:
+
+```ts
+export function invoiceTotal(lineCents: number[], vatRate: number): number {
+  let subtotal = 0;
+  for (const cents of lineCents) {
+    subtotal += cents;
+  }
+  const vat = Math.round(subtotal * vatRate);
+
+  return subtotal + vat;
+}
+
+export function discountCents(cents: number, code: string): number {
+  if (code === 'HALF') {
+    return cents / 2;
+  }
+  if (code === 'TENOFF') {
+    return cents - 1000;
+  }
+  return cents;
+}
 ```
 
 <!-- rules:end -->
