@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "Every `<label>` has text and is tied to a form control, by wrapping it or with `htmlFor`.",
+  "why": "A screen reader announces an input by its label, and clicking a tied label focuses the input. A label that sits next to an input without being tied to it does neither."
+}

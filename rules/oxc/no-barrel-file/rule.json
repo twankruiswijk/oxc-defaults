@@ -1,0 +1,6 @@
+{
+  "group": "Modules",
+  "summary": "No barrel files: an `index.ts` that re-exports other modules with `export *`. Import from the module that defines the value.",
+  "why": "A barrel makes every importer load every module behind it, which slows builds, tests and dev servers, and it hides import cycles behind one path.",
+  "note": "The rule is set with `threshold: 0`, so a single `export *` counts. It does not see named re-exports such as `export { a } from './a'`."
+}

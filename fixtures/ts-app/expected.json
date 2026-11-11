@@ -1,0 +1,3 @@
+{
+  "src/broken.ts": ["paragraphs/guards", "typescript/no-explicit-any"]
+}

@@ -2,19 +2,59 @@
 
 Shared oxlint and oxfmt settings for TypeScript projects, with a bad and a good example for every lint rule.
 
+## Presets
+
+| Preset | For | Adds |
+| --- | --- | --- |
+| `base.json` | Every TypeScript project | The base rules and the `paragraphs/*` whitespace plugin |
+| `react.json` | React projects, on top of `base.json` | Hooks, list keys and accessibility rules, plus the `react` and `jsx-a11y` correctness rules |
+| `strict.json` | Opt-in, on top of `base.json` | Named exports only, no barrel files, kebab-case file names |
+
+A project lists the presets it needs in `extends` and puts its own rules on top. oxlint merges `extends` first to last, and the project's own `rules` win over all of them.
+
 ## Use them in a project
 
-Download both configs into your project root:
+Pin a release tag, so a change here never lands in your project unannounced. Pick one from the [releases](https://github.com/twankruiswijk/oxc-defaults/tags), and download the presets into an `oxc/` folder:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/.oxlintrc.json
-curl -fsSLO https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/.oxfmtrc.json
-curl -fsSL --create-dirs -o plugins/paragraphs.ts https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/main/plugins/paragraphs.ts
+V=v1.0.0
+BASE_URL=https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/$V
+curl -fsSL --create-dirs -o oxc/base.json $BASE_URL/base.json
+curl -fsSL --create-dirs -o oxc/plugins/paragraphs.ts $BASE_URL/plugins/paragraphs.ts
+curl -fsSLO $BASE_URL/.oxfmtrc.json
 ```
 
-The third file is the oxlint plugin behind the `paragraphs/*` whitespace rules. `.oxlintrc.json` loads it from `./plugins/paragraphs.ts`.
+### TypeScript app
 
-Install the tools:
+`.oxlintrc.json` in the project root:
+
+```json
+{
+  "extends": ["./oxc/base.json"],
+  "rules": {}
+}
+```
+
+### React app
+
+Also download the React layer:
+
+```sh
+curl -fsSL --create-dirs -o oxc/react.json $BASE_URL/react.json
+```
+
+and extend both, base first:
+
+```json
+{
+  "extends": ["./oxc/base.json", "./oxc/react.json"],
+  "rules": {}
+}
+```
+
+For the strict layer, download `strict.json` the same way and add `"./oxc/strict.json"` to `extends`.
+
+### Tools and scripts
 
 ```sh
 pnpm add -D oxlint oxlint-tsgolint oxfmt
@@ -28,14 +68,18 @@ Add the scripts, replacing `src` with your source folder:
 "fmt:check": "oxfmt --check src"
 ```
 
+To upgrade, change `V` and run the downloads again.
+
 ## Gotchas
 
-- `--type-aware` needs `oxlint-tsgolint`. Without it, `no-unnecessary-condition` and `no-unsafe-type-assertion` do not run.
-- The config sets oxlint's built-in correctness checks to errors, so they fail the run even without `--deny-warnings`. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
-- In `*.test.ts` and `*.spec.ts` files, `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
+- `--type-aware` needs `oxlint-tsgolint`. Without it, `no-unnecessary-condition` and `no-unsafe-type-assertion` do not run. Pass it on the command line: oxlint only reads `options.typeAware` from the root config, never from a preset in `extends`.
+- `base.json` sets oxlint's built-in correctness checks to errors, so they fail the run even without `--deny-warnings`. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
+- Paths inside a preset resolve from the preset's own folder. `jsPlugins` in `base.json` says `./plugins/paragraphs.ts`, so with `base.json` in `oxc/` the plugin lives in `oxc/plugins/`. The fixtures prove this.
+- A preset's `plugins` adds to the plugins of the presets before it; the fixtures prove `react.json` keeps base's `typescript` rules and `paragraphs/*` plugin. `react.json` still lists the full set, so it stays correct if oxlint ever switches to replacing. In your own `.oxlintrc.json`, leave `plugins` out unless you need another plugin, and then list them all: at the root, `plugins` replaces oxlint's default plugin list.
+- In `*.test.*` and `*.spec.*` files (`.ts` and `.tsx`), `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
 - The `paragraphs/*` rules come from `plugins/paragraphs.ts`, an oxlint JS plugin. oxlint has no built-in rule for blank lines between statements, and oxfmt keeps the blank lines you write but never adds one. The plugin runs on Node 22.18 or newer, since it is TypeScript. JS plugins are still alpha in oxlint, so pin the oxlint version. `oxlint --fix` adds every missing blank line these rules report.
-- The plugin only imports types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
-- `plugins` replaces oxlint's default plugin list instead of adding to it. Keep `typescript`, `unicorn` and `oxc` in it, or their rules turn off without any error.
+- The plugin only imports types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `oxc/plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
+- The `$schema` line in each preset points at `./node_modules/...`, which does not exist next to `oxc/`. oxlint ignores it; only editor completion in those files is lost.
 
 ## Formatting
 
@@ -45,17 +89,23 @@ Add the scripts, replacing `src` with your source folder:
 
 ## Changing a rule
 
-1. Change the rule in `.oxlintrc.json`.
-2. Add or update its folder `rules/<plugin>/<rule>/`. `rule.json` holds the group, summary and why. `bad.ts` and `good.ts` hold the examples; use `bad/` and `good/` folders when an example needs several files.
-3. Run `pnpm readme` to regenerate the rule list below, then `pnpm check`.
+1. Change the rule in the preset it belongs to: `base.json`, `react.json` or `strict.json`. A rule is set in one preset only.
+2. Add or update its folder `rules/<plugin>/<rule>/`. `rule.json` holds the group, summary and why. `bad.ts` and `good.ts` hold the examples (`bad.tsx` and `good.tsx` for React rules); use `bad/` and `good/` folders when an example needs several files.
+3. Run `pnpm readme` to regenerate the rule list below, then `pnpm check` and `pnpm fixtures`.
 
-`pnpm check` fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. CI runs it on every push and pull request. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
+`pnpm check` lints each example with the preset that sets its rule, on top of `base.json`. It fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
+
+`pnpm fixtures` copies the presets into `oxc/` inside each project in `fixtures/`, the way the recipes above do, lints it and compares the result with its `expected.json`. `fixtures/ts-app` extends `base.json`; `fixtures/react-app` extends `base.json` and `react.json`. CI runs both scripts on every push and pull request.
 
 ## Lint rules
 
-Every rule below is an error. On top of these, oxlint runs its built-in correctness checks, also as errors.
+Every rule below is an error. On top of these, oxlint runs the built-in correctness checks of every plugin a preset lists, also as errors.
 
 <!-- rules:start -->
+
+## Base rules
+
+Set in `base.json`, for every TypeScript project.
 
 ### Imports
 
@@ -1076,6 +1126,468 @@ export function discountCents(cents: number, code: string): number {
     return cents - 1000;
   }
   return cents;
+}
+```
+
+## React rules
+
+Set in `react.json`, on top of `base.json` in React projects. It also turns on the correctness rules of the `react` and `jsx-a11y` plugins.
+
+### Hooks
+
+#### `react/rules-of-hooks`
+
+Hooks are called at the top level of a component or custom hook: never inside a condition, a loop, a nested function or after an early return.
+
+**Why:** React matches each hook call to its state by call order. A hook that runs only sometimes shifts that order, and the component reads another hook's state.
+
+oxlint has two versions of this rule. `react/rules-of-hooks` is the port of `eslint-plugin-react-hooks` and also catches hooks called in loops and in plain functions; `react/hooks` only reports conditional calls.
+
+Bad:
+
+```tsx
+import { useState } from 'react';
+
+export function DiscountField({ hasCode }: { hasCode: boolean }) {
+  if (!hasCode) {
+    return null;
+  }
+
+  const [code, setCode] = useState('');
+
+  return <input aria-label="Discount code" value={code} onChange={(event) => setCode(event.target.value)} />;
+}
+```
+
+Good:
+
+```tsx
+import { useState } from 'react';
+
+export function DiscountField({ hasCode }: { hasCode: boolean }) {
+  const [code, setCode] = useState('');
+  if (!hasCode) {
+    return null;
+  }
+
+  return <input aria-label="Discount code" value={code} onChange={(event) => setCode(event.target.value)} />;
+}
+```
+
+#### `react/exhaustive-deps`
+
+The dependency list of `useEffect`, `useMemo`, `useCallback` and friends names every value from the component that the callback reads.
+
+**Why:** A missing dependency leaves the callback holding the value from an earlier render. Nothing crashes; the screen just shows stale data.
+
+When an effect should not re-run for a value, move that value out of the component or read it through a ref, instead of leaving it out of the list.
+
+Bad:
+
+```tsx
+import { useEffect, useState } from 'react';
+
+declare function fetchStatus(orderId: string): Promise<string>;
+
+export function OrderStatus({ orderId }: { orderId: string }) {
+  const [status, setStatus] = useState('loading');
+
+  useEffect(() => {
+    void fetchStatus(orderId).then(setStatus);
+  }, []);
+
+  return <p>{status}</p>;
+}
+```
+
+Good:
+
+```tsx
+import { useEffect, useState } from 'react';
+
+declare function fetchStatus(orderId: string): Promise<string>;
+
+export function OrderStatus({ orderId }: { orderId: string }) {
+  const [status, setStatus] = useState('loading');
+
+  useEffect(() => {
+    void fetchStatus(orderId).then(setStatus);
+  }, [orderId]);
+
+  return <p>{status}</p>;
+}
+```
+
+### Lists
+
+#### `react/jsx-key`
+
+Every element in a list built with `map` (or a literal array of elements) has a `key`.
+
+**Why:** React uses the key to tell list items apart between renders. Without one it re-renders every item and moves state such as input text to the wrong row.
+
+Bad:
+
+```tsx
+interface Order {
+  id: string;
+  name: string;
+}
+
+export function OrderList({ orders }: { orders: Order[] }) {
+  return (
+    <ul>
+      {orders.map((order) => (
+        <li>{order.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Good:
+
+```tsx
+interface Order {
+  id: string;
+  name: string;
+}
+
+export function OrderList({ orders }: { orders: Order[] }) {
+  return (
+    <ul>
+      {orders.map((order) => (
+        <li key={order.id}>{order.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+#### `react/no-array-index-key`
+
+A list item's `key` comes from the item, such as its id, not from its position in the array.
+
+**Why:** An index key stays with the position, not the item. When the list is sorted, filtered or prepended, React keeps the old row's state and DOM for a different item.
+
+Bad:
+
+```tsx
+interface Order {
+  id: string;
+  name: string;
+}
+
+export function OrderList({ orders }: { orders: Order[] }) {
+  return (
+    <ul>
+      {orders.map((order, index) => (
+        <li key={index}>{order.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Good:
+
+```tsx
+interface Order {
+  id: string;
+  name: string;
+}
+
+export function OrderList({ orders }: { orders: Order[] }) {
+  return (
+    <ul>
+      {orders.map((order) => (
+        <li key={order.id}>{order.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Accessibility
+
+#### `jsx-a11y/alt-text`
+
+Every `<img>`, `<area>`, `<input type="image">` and `<object>` has a text alternative. Use `alt=""` for an image that is only decoration.
+
+**Why:** Screen readers read the `alt` text in place of the image. Without it they read the file name, or skip an image that carries meaning.
+
+Bad:
+
+```tsx
+export function Receipt({ url }: { url: string }) {
+  return <img src={url} />;
+}
+```
+
+Good:
+
+```tsx
+export function Receipt({ url }: { url: string }) {
+  return <img src={url} alt="Receipt for your order" />;
+}
+```
+
+#### `jsx-a11y/anchor-is-valid`
+
+An `<a>` has an `href` that goes somewhere. No `href="#"`, no `javascript:` and no `<a onClick>` without a link.
+
+**Why:** A link is for navigation: it can be opened in a new tab, bookmarked and reached by keyboard because of its `href`. An action such as cancelling an order belongs on a `<button>`, which keyboards and screen readers treat as one.
+
+Bad:
+
+```tsx
+export function CancelOrder({ onCancel }: { onCancel: () => void }) {
+  return <a onClick={onCancel}>Cancel order</a>;
+}
+```
+
+Good:
+
+```tsx
+export function CancelOrder({ onCancel }: { onCancel: () => void }) {
+  return (
+    <p>
+      <button type="button" onClick={onCancel}>
+        Cancel order
+      </button>
+      <a href="/orders">Back to your orders</a>
+    </p>
+  );
+}
+```
+
+#### `jsx-a11y/label-has-associated-control`
+
+Every `<label>` has text and is tied to a form control, by wrapping it or with `htmlFor`.
+
+**Why:** A screen reader announces an input by its label, and clicking a tied label focuses the input. A label that sits next to an input without being tied to it does neither.
+
+Bad:
+
+```tsx
+export function EmailField() {
+  return (
+    <div>
+      <label>Email</label>
+      <input type="email" />
+    </div>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function EmailField() {
+  return (
+    <label>
+      Email
+      <input type="email" />
+    </label>
+  );
+}
+```
+
+#### `jsx-a11y/no-autofocus`
+
+No `autoFocus` prop.
+
+**Why:** Autofocus moves a screen reader past the content above the field without warning, and on phones it pops up the keyboard over the page the moment it loads.
+
+Bad:
+
+```tsx
+export function SearchField() {
+  return (
+    <label>
+      Search orders
+      <input type="search" autoFocus />
+    </label>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function SearchField() {
+  return (
+    <label>
+      Search orders
+      <input type="search" />
+    </label>
+  );
+}
+```
+
+#### `jsx-a11y/click-events-have-key-events`
+
+An element with `onClick` also handles the keyboard, with `onKeyDown`, `onKeyUp` or `onKeyPress`. Native buttons and links already do.
+
+**Why:** What a mouse can do, a keyboard can do. People who navigate with a keyboard or a switch device cannot click, so a click-only handler locks them out.
+
+Bad:
+
+```tsx
+export function OrderRow({ name, onOpen }: { name: string; onOpen: () => void }) {
+  return (
+    <div role="button" tabIndex={0} onClick={onOpen}>
+      {name}
+    </div>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function OrderRow({ name, onOpen }: { name: string; onOpen: () => void }) {
+  return (
+    <button type="button" onClick={onOpen}>
+      {name}
+    </button>
+  );
+}
+```
+
+#### `jsx-a11y/no-static-element-interactions`
+
+Elements without a role, such as `<div>` and `<span>`, get no mouse or keyboard handlers. Use a `<button>` or a link instead.
+
+**Why:** A clickable `div` is invisible to screen readers and cannot be reached with Tab. A `<button>` comes with the role, focus and Enter and Space handling for free.
+
+Bad:
+
+```tsx
+export function OrderRow({ name, onOpen }: { name: string; onOpen: () => void }) {
+  return (
+    <div onClick={onOpen} onKeyDown={onOpen}>
+      {name}
+    </div>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function OrderRow({ name, onOpen }: { name: string; onOpen: () => void }) {
+  return (
+    <button type="button" onClick={onOpen}>
+      {name}
+    </button>
+  );
+}
+```
+
+## Strict rules
+
+Set in `strict.json`, an opt-in layer on top of `base.json` for projects that want named exports, no barrel files and kebab-case file names.
+
+### Modules
+
+#### `import/no-default-export`
+
+Modules use named exports, never `export default`. Files that a tool requires to default-export, `*.config.*` and Storybook `*.stories.*`, are exempt.
+
+**Why:** A named export has one name everywhere, so search, rename and auto-import find every use. A default export is renamed by each file that imports it.
+
+Bad:
+
+```ts
+export default function formatPrice(cents: number): string {
+  return `€${(cents / 100).toFixed(2)}`;
+}
+```
+
+Good:
+
+```ts
+// format-price.ts
+export function formatPrice(cents: number): string {
+  return `€${(cents / 100).toFixed(2)}`;
+}
+
+// vite.config.ts
+export default {
+  build: { target: 'es2022' },
+};
+```
+
+#### `oxc/no-barrel-file`
+
+No barrel files: an `index.ts` that re-exports other modules with `export *`. Import from the module that defines the value.
+
+**Why:** A barrel makes every importer load every module behind it, which slows builds, tests and dev servers, and it hides import cycles behind one path.
+
+The rule is set with `threshold: 0`, so a single `export *` counts. It does not see named re-exports such as `export { a } from './a'`.
+
+Bad:
+
+```ts
+// index.ts
+export * from './invoices';
+export * from './orders';
+
+// invoices.ts
+export interface Invoice {
+  orderId: string;
+}
+
+// orders.ts
+export interface Order {
+  id: string;
+}
+```
+
+Good:
+
+```ts
+// checkout.ts
+import type { Invoice } from './invoices';
+import type { Order } from './orders';
+
+export function invoiceFor(order: Order): Invoice {
+  return { orderId: order.id };
+}
+
+// invoices.ts
+export interface Invoice {
+  orderId: string;
+}
+
+// orders.ts
+export interface Order {
+  id: string;
+}
+```
+
+### Files
+
+#### `unicorn/filename-case`
+
+File names are kebab-case: `order-summary.tsx`, not `OrderSummary.tsx`. A component keeps its PascalCase name inside the file.
+
+**Why:** One naming style means nobody has to guess how a file is spelled, and it avoids imports that work on a case-insensitive Mac and break on Linux CI.
+
+Bad:
+
+```ts
+export function OrderSummary(): string {
+  return 'Order summary';
+}
+```
+
+Good:
+
+```ts
+export function OrderSummary(): string {
+  return 'Order summary';
 }
 ```
 

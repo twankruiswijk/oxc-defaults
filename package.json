@@ -5,15 +5,17 @@
   "packageManager": "pnpm@12.16.1",
   "scripts": {
     "lint": "oxlint --type-aware --deny-warnings scripts plugins",
-    "fmt": "oxfmt scripts plugins rules",
-    "fmt:check": "oxfmt --check scripts plugins rules",
+    "fmt": "oxfmt scripts plugins rules fixtures",
+    "fmt:check": "oxfmt --check scripts plugins rules fixtures",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "readme": "node scripts/readme.ts",
-    "check": "node scripts/check.ts"
+    "check": "node scripts/check.ts",
+    "fixtures": "node scripts/fixtures.ts"
   },
   "devDependencies": {
     "@oxlint/plugins": "^1.92.0",
     "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
     "oxfmt": "^0.76.0",
     "oxlint": "^1.91.0",
     "oxlint-tsgolint": "^7.0.2005",

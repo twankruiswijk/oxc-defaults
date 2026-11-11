@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "An `<a>` has an `href` that goes somewhere. No `href=\"#\"`, no `javascript:` and no `<a onClick>` without a link.",
+  "why": "A link is for navigation: it can be opened in a new tab, bookmarked and reached by keyboard because of its `href`. An action such as cancelling an order belongs on a `<button>`, which keyboards and screen readers treat as one."
+}

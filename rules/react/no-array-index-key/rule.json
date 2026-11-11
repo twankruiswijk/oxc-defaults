@@ -1,0 +1,5 @@
+{
+  "group": "Lists",
+  "summary": "A list item's `key` comes from the item, such as its id, not from its position in the array.",
+  "why": "An index key stays with the position, not the item. When the list is sorted, filtered or prepended, React keeps the old row's state and DOM for a different item."
+}

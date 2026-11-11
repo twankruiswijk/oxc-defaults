@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "Every `<img>`, `<area>`, `<input type=\"image\">` and `<object>` has a text alternative. Use `alt=\"\"` for an image that is only decoration.",
+  "why": "Screen readers read the `alt` text in place of the image. Without it they read the file name, or skip an image that carries meaning."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Modules",
+  "summary": "Modules use named exports, never `export default`. Files that a tool requires to default-export, `*.config.*` and Storybook `*.stories.*`, are exempt.",
+  "why": "A named export has one name everywhere, so search, rename and auto-import find every use. A default export is renamed by each file that imports it."
+}

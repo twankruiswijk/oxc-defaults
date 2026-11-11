@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "Elements without a role, such as `<div>` and `<span>`, get no mouse or keyboard handlers. Use a `<button>` or a link instead.",
+  "why": "A clickable `div` is invisible to screen readers and cannot be reached with Tab. A `<button>` comes with the role, focus and Enter and Space handling for free."
+}
