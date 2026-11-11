@@ -1,0 +1,5 @@
+{
+  "group": "Security",
+  "summary": "No `dangerouslySetInnerHTML`.",
+  "why": "Raw HTML skips React's escaping, so any user input that reaches it is a cross-site scripting hole. Render the content as elements, or turn the rule off on the one line that sanitizes it first."
+}

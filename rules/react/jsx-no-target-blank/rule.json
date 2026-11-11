@@ -1,0 +1,5 @@
+{
+  "group": "Security",
+  "summary": "A link with `target=\"_blank\"` to another site also has `rel=\"noreferrer\"`.",
+  "why": "Without it, older browsers give the opened page `window.opener`, so it can redirect your tab to a phishing page, and every browser sends it your page's full URL as the referrer."
+}

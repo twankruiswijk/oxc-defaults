@@ -149,6 +149,32 @@ import { formatPrice } from './money';
 export const orderTotal = (cents: number): string => formatPrice(cents);
 ```
 
+#### `typescript/consistent-type-imports`
+
+A name used only as a type is imported with `type`, inline in the import list.
+
+**Why:** Type-only imports are erased at build time, so a bundler never loads a module just for its types, and the reader sees at a glance which imports exist at runtime.
+
+Bad:
+
+```ts
+import { EventEmitter } from 'node:events';
+
+export function listenerTotal(emitter: EventEmitter): number {
+  return emitter.eventNames().length;
+}
+```
+
+Good:
+
+```ts
+import { type EventEmitter } from 'node:events';
+
+export function listenerTotal(emitter: EventEmitter): number {
+  return emitter.eventNames().length;
+}
+```
+
 ### Types
 
 #### `typescript/no-explicit-any`
@@ -1305,6 +1331,173 @@ export function OrderList({ orders }: { orders: Order[] }) {
       ))}
     </ul>
   );
+}
+```
+
+### Components
+
+#### `react/function-component-definition`
+
+A named component is a function declaration, not an arrow function or function expression assigned to a variable.
+
+**Why:** One shape for every component: it is hoisted, its name shows in stack traces and React DevTools, and it reads the same as every other function in the codebase.
+
+Bad:
+
+```tsx
+export const Greeting = ({ name }: { name: string }) => {
+  return <p>Hello {name}</p>;
+};
+```
+
+Good:
+
+```tsx
+export function Greeting({ name }: { name: string }) {
+  return <p>Hello {name}</p>;
+}
+```
+
+#### `react/only-export-components`
+
+A file that exports a component exports only components (and types).
+
+**Why:** Fast refresh can only swap a module in place when every export is a component. One exported constant or helper makes every edit to that file reload the page and lose state.
+
+Bad:
+
+```tsx
+export const MAX_ITEMS = 10;
+
+export function CartBadge({ count }: { count: number }) {
+  return <span>{Math.min(count, MAX_ITEMS)}</span>;
+}
+```
+
+Good:
+
+```tsx
+const MAX_ITEMS = 10;
+
+export function CartBadge({ count }: { count: number }) {
+  return <span>{Math.min(count, MAX_ITEMS)}</span>;
+}
+```
+
+#### `react/jsx-no-constructed-context-values`
+
+A context provider's `value` is not an object, array or function created during render.
+
+**Why:** A value created during render is new on every render, so every component that reads the context re-renders too, even when nothing in it changed. Wrap it in `useMemo` or `useCallback`.
+
+Bad:
+
+```tsx
+import { createContext, type ReactNode, useState } from 'react';
+
+const ThemeContext = createContext({ dark: false, toggle: () => {} });
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [dark, setDark] = useState(false);
+
+  return <ThemeContext value={{ dark, toggle: () => setDark(!dark) }}>{children}</ThemeContext>;
+}
+```
+
+Good:
+
+```tsx
+import { createContext, type ReactNode, useMemo, useState } from 'react';
+
+const ThemeContext = createContext({ dark: false, toggle: () => {} });
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [dark, setDark] = useState(false);
+  const theme = useMemo(() => ({ dark, toggle: () => setDark(!dark) }), [dark]);
+
+  return <ThemeContext value={theme}>{children}</ThemeContext>;
+}
+```
+
+### Forms
+
+#### `react/button-has-type`
+
+Every `<button>` has an explicit `type`: `button`, `submit` or `reset`.
+
+**Why:** A button without a type is a submit button. Inside a form, a button meant to open a menu or clear a field submits the form instead.
+
+Bad:
+
+```tsx
+export function ClearButton({ onClear }: { onClear: () => void }) {
+  return <button onClick={onClear}>Clear</button>;
+}
+```
+
+Good:
+
+```tsx
+export function ClearButton({ onClear }: { onClear: () => void }) {
+  return (
+    <button type="button" onClick={onClear}>
+      Clear
+    </button>
+  );
+}
+```
+
+### Security
+
+#### `react/jsx-no-target-blank`
+
+A link with `target="_blank"` to another site also has `rel="noreferrer"`.
+
+**Why:** Without it, older browsers give the opened page `window.opener`, so it can redirect your tab to a phishing page, and every browser sends it your page's full URL as the referrer.
+
+Bad:
+
+```tsx
+export function DocsLink() {
+  return (
+    <a href="https://oxc.rs/docs" target="_blank">
+      Docs
+    </a>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function DocsLink() {
+  return (
+    <a href="https://oxc.rs/docs" target="_blank" rel="noreferrer">
+      Docs
+    </a>
+  );
+}
+```
+
+#### `react/no-danger`
+
+No `dangerouslySetInnerHTML`.
+
+**Why:** Raw HTML skips React's escaping, so any user input that reaches it is a cross-site scripting hole. Render the content as elements, or turn the rule off on the one line that sanitizes it first.
+
+Bad:
+
+```tsx
+export function Comment({ body }: { body: string }) {
+  return <p dangerouslySetInnerHTML={{ __html: body }} />;
+}
+```
+
+Good:
+
+```tsx
+export function Comment({ body }: { body: string }) {
+  return <p>{body}</p>;
 }
 ```
 

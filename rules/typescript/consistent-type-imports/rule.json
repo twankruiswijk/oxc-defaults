@@ -1,0 +1,5 @@
+{
+  "group": "Imports",
+  "summary": "A name used only as a type is imported with `type`, inline in the import list.",
+  "why": "Type-only imports are erased at build time, so a bundler never loads a module just for its types, and the reader sees at a glance which imports exist at runtime."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Forms",
+  "summary": "Every `<button>` has an explicit `type`: `button`, `submit` or `reset`.",
+  "why": "A button without a type is a submit button. Inside a form, a button meant to open a menu or clear a field submits the form instead."
+}

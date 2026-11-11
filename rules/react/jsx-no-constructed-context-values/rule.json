@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "A context provider's `value` is not an object, array or function created during render.",
+  "why": "A value created during render is new on every render, so every component that reads the context re-renders too, even when nothing in it changed. Wrap it in `useMemo` or `useCallback`."
+}
