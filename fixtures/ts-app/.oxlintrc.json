@@ -1,0 +1,4 @@
+{
+  "extends": ["./oxc/base.json"],
+  "rules": {}
+}

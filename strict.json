@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "rules": {
+    "import/no-default-export": "error",
+    "oxc/no-barrel-file": ["error", { "threshold": 0 }],
+    "unicorn/filename-case": ["error", { "case": "kebabCase" }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.config.{ts,mts,js,mjs}", "**/*.stories.{ts,tsx}"],
+      "rules": { "import/no-default-export": "off" }
+    }
+  ]
+}

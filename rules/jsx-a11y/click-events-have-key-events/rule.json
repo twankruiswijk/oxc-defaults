@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "An element with `onClick` also handles the keyboard, with `onKeyDown`, `onKeyUp` or `onKeyPress`. Native buttons and links already do.",
+  "why": "What a mouse can do, a keyboard can do. People who navigate with a keyboard or a switch device cannot click, so a click-only handler locks them out."
+}

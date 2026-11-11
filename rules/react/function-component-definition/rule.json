@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "A named component is a function declaration, not an arrow function or function expression assigned to a variable.",
+  "why": "One shape for every component: it is hoisted, its name shows in stack traces and React DevTools, and it reads the same as every other function in the codebase."
+}

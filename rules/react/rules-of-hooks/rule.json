@@ -1,0 +1,6 @@
+{
+  "group": "Hooks",
+  "summary": "Hooks are called at the top level of a component or custom hook: never inside a condition, a loop, a nested function or after an early return.",
+  "why": "React matches each hook call to its state by call order. A hook that runs only sometimes shifts that order, and the component reads another hook's state.",
+  "note": "oxlint has two versions of this rule. `react/rules-of-hooks` is the port of `eslint-plugin-react-hooks` and also catches hooks called in loops and in plain functions; `react/hooks` only reports conditional calls."
+}

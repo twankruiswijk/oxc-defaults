@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "A file that exports a component exports only components (and types).",
+  "why": "Fast refresh can only swap a module in place when every export is a component. One exported constant or helper makes every edit to that file reload the page and lose state."
+}

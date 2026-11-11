@@ -1,0 +1,6 @@
+{
+  "group": "Hooks",
+  "summary": "The dependency list of `useEffect`, `useMemo`, `useCallback` and friends names every value from the component that the callback reads.",
+  "why": "A missing dependency leaves the callback holding the value from an earlier render. Nothing crashes; the screen just shows stale data.",
+  "note": "When an effect should not re-run for a value, move that value out of the component or read it through a ref, instead of leaving it out of the list."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "No `autoFocus` prop.",
+  "why": "Autofocus moves a screen reader past the content above the field without warning, and on phones it pops up the keyboard over the page the moment it loads."
+}

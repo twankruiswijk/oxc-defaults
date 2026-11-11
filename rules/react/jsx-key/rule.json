@@ -1,0 +1,5 @@
+{
+  "group": "Lists",
+  "summary": "Every element in a list built with `map` (or a literal array of elements) has a `key`.",
+  "why": "React uses the key to tell list items apart between renders. Without one it re-renders every item and moves state such as input text to the wrong row."
+}

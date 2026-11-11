@@ -1,0 +1,5 @@
+{
+  "group": "Files",
+  "summary": "File names are kebab-case: `order-summary.tsx`, not `OrderSummary.tsx`. A component keeps its PascalCase name inside the file.",
+  "why": "One naming style means nobody has to guess how a file is spelled, and it avoids imports that work on a case-insensitive Mac and break on Linux CI."
+}

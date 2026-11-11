@@ -6,9 +6,11 @@ import {
   type ExampleFile,
   expectedReadme,
   folderNames,
+  layeredConfig,
   type LintConfig,
+  type Preset,
+  PRESETS,
   README_PATH,
-  readLintConfig,
   readRuleDocs,
   REPO_ROOT,
   RULES_DIR,
@@ -17,20 +19,26 @@ import {
 
 const WORK_DIR = mkdtempSync(join(tmpdir(), 'oxc-defaults-check-'));
 const OXLINT = join(REPO_ROOT, 'node_modules', '.bin', 'oxlint');
-const DIAGNOSTIC_RULE = /\[(?:Error|Warning)\/(\w+)\(([\w-]+)\)\]/g;
+const DIAGNOSTIC_RULE = /\[(?:Error|Warning)\/([\w-]+)\(([\w-]+)\)\]/g;
+const PLUGIN_ALIASES = new Map([['react-hooks', 'react']]);
 const EXAMPLE_TSCONFIG = {
-  compilerOptions: { strict: true, target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', noEmit: true },
-  include: ['**/*.ts'],
+  compilerOptions: { strict: true, target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', jsx: 'react-jsx', noEmit: true },
+  include: ['**/*.ts', '**/*.tsx'],
 };
 
-const config = readLintConfig();
-const docs = readRuleDocs(config.rules.keys());
+const configs = new Map<Preset, LintConfig>(PRESETS.map((preset) => [preset, layeredConfig(preset)]));
+const docs = readRuleDocs();
 const problems: string[] = [];
 symlinkSync(join(REPO_ROOT, 'node_modules'), join(WORK_DIR, 'node_modules'));
 
-problems.push(...unconfiguredRuleFolders(config));
+problems.push(...unconfiguredRuleFolders(new Set(docs.map((doc) => doc.rule))));
 
 for (const doc of docs) {
+  const config = configs.get(doc.preset);
+  if (config === undefined) {
+    throw new Error(`${doc.preset.file} is not a preset`);
+  }
+
   problems.push(...exampleProblems(doc, config));
 }
 
@@ -44,14 +52,14 @@ if (problems.length > 0) {
 
 console.log(`${docs.length} rules checked: every bad example is flagged, every good example is clean and README.md is current`);
 
-function unconfiguredRuleFolders(lintConfig: LintConfig): string[] {
+function unconfiguredRuleFolders(configuredRules: ReadonlySet<string>): string[] {
   const problemsFound: string[] = [];
 
   for (const plugin of folderNames(RULES_DIR)) {
     for (const name of folderNames(join(RULES_DIR, plugin))) {
       const rule = `${plugin}/${name}`;
-      if (!lintConfig.rules.has(rule)) {
-        problemsFound.push(`rules/${rule} documents a rule that .oxlintrc.json does not set`);
+      if (!configuredRules.has(rule)) {
+        problemsFound.push(`rules/${rule} documents a rule that no preset sets`);
       }
     }
   }
@@ -72,6 +80,7 @@ function exampleProblems(doc: RuleDoc, lintConfig: LintConfig): string[] {
     jsPlugins: lintConfig.jsPlugins,
     categories: lintConfig.categories,
     rules: { ...Object.fromEntries(lintConfig.rules), [doc.rule]: ruleSetting },
+    overrides: lintConfig.overrides,
   };
   const problemsFound: string[] = [];
 
@@ -110,7 +119,10 @@ function rulesFlagging(doc: RuleDoc, kind: 'bad' | 'good', lintConfig: object): 
     throw linted.error;
   }
 
-  const flaggedBy = Array.from(linted.stdout.matchAll(DIAGNOSTIC_RULE), ([, plugin, name]) => `${plugin}/${name}`);
+  const flaggedBy = Array.from(
+    linted.stdout.matchAll(DIAGNOSTIC_RULE),
+    ([, plugin = '', name]) => `${PLUGIN_ALIASES.get(plugin) ?? plugin}/${name}`,
+  );
   const oxlintFailed = linted.status !== 0 && flaggedBy.length === 0;
   if (oxlintFailed) {
     throw new Error(`oxlint failed on the ${kind} example of ${doc.rule}:\n${linted.stdout}${linted.stderr}`);

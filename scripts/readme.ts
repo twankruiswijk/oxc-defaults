@@ -1,8 +1,7 @@
 import { writeFileSync } from 'node:fs';
-import { expectedReadme, README_PATH, readLintConfig, readRuleDocs } from './rules.ts';
+import { expectedReadme, README_PATH, readRuleDocs } from './rules.ts';
 
-const config = readLintConfig();
-const docs = readRuleDocs(config.rules.keys());
+const docs = readRuleDocs();
 
 writeFileSync(README_PATH, expectedReadme(docs));
 console.log(`README.md lists ${docs.length} rules`);

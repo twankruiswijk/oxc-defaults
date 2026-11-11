@@ -1,0 +1,3 @@
+{
+  "src/broken.tsx": ["jsx-a11y/alt-text", "paragraphs/guards", "react/rules-of-hooks", "typescript/no-explicit-any"]
+}
