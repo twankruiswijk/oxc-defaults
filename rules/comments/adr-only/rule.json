@@ -1,0 +1,6 @@
+{
+  "group": "Comments",
+  "summary": "No comments, except a short `// ADR-012: reason` where the code makes a deliberate choice, and directives for tools such as `oxlint-disable-next-line` or `@ts-expect-error`.",
+  "why": "Code should explain itself through names and small functions. Where it does something on purpose that looks wrong, an agent or a teammate will \"fix\" it; a one-line pointer to the ADR stops that and leaves the full reasoning in the ADR.",
+  "note": "The comment starts with `ADR-`, a number, a colon and the reason. Also allowed: `oxlint-`/`eslint-disable` and `-enable`, `@ts-expect-error`, `/// <reference>`, `oxfmt-ignore`/`prettier-ignore`, `@vitest-environment`/`@jest-environment` and `c8`/`v8`/`istanbul ignore`. JSDoc is not allowed. A project can allow more with `[\"error\", { \"allow\": [\"^@license\"] }]`: each entry is a regular expression tested against the comment text."
+}
