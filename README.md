@@ -6,7 +6,7 @@ Shared oxlint and oxfmt settings for TypeScript projects, with a bad and a good 
 
 | Preset | For | Adds |
 | --- | --- | --- |
-| `base.json` | Every TypeScript project | The base rules, oxlint's `correctness`, `suspicious` and `perf` categories, and the `paragraphs/*` whitespace plugin |
+| `base.json` | Every TypeScript project | The base rules, oxlint's `correctness`, `suspicious` and `perf` categories, the `paragraphs/*` whitespace plugin and the `comments/adr-only` plugin |
 | `react.json` | React projects, on top of `base.json` | Hooks, list keys, JSX style and accessibility rules, plus the categories above for the `react` and `jsx-a11y` plugins |
 | `tailwind.json` | Tailwind CSS v4 projects, on top of `base.json` | Class rules from `oxlint-tailwindcss` that read your theme: unknown, conflicting, deprecated and hardcoded-color classes, and one canonical way to write each class |
 | `strict.json` | Opt-in, on top of `base.json` | Named exports only, no barrel files, kebab-case file names |
@@ -58,6 +58,7 @@ V=v1.0.0
 BASE_URL=https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/$V
 curl -fsSL --create-dirs -o oxc/base.json $BASE_URL/base.json
 curl -fsSL --create-dirs -o oxc/plugins/paragraphs.ts $BASE_URL/plugins/paragraphs.ts
+curl -fsSL --create-dirs -o oxc/plugins/comments.ts $BASE_URL/plugins/comments.ts
 curl -fsSLO $BASE_URL/.oxfmtrc.json
 ```
 
@@ -131,7 +132,8 @@ To upgrade, change `V` and run the downloads again.
 - A preset's `plugins` adds to the plugins of the presets before it; the fixtures prove `react.json` keeps base's `typescript` rules and `paragraphs/*` plugin. `react.json` still lists the full set, so it stays correct if oxlint ever switches to replacing. In your own `.oxlintrc.json`, leave `plugins` out unless you need another plugin, and then list them all: at the root, `plugins` replaces oxlint's default plugin list.
 - In `*.test.*` and `*.spec.*` files (`.ts` and `.tsx`), `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
 - The `paragraphs/*` rules come from `plugins/paragraphs.ts`, an oxlint JS plugin. oxlint has no built-in rule for blank lines between statements, and oxfmt keeps the blank lines you write but never adds one. The plugin runs on Node 22.18 or newer, since it is TypeScript. JS plugins are still alpha in oxlint, so pin the oxlint version. `oxlint --fix` adds every missing blank line these rules report.
-- The plugin only imports types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `oxc/plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
+- `comments/adr-only` comes from `plugins/comments.ts`, the same kind of JS plugin. oxlint's own comment rules can ban inline or TODO comments, but none can allow only comments that match a pattern.
+- The plugins only import types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `oxc/plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
 - `tailwind.json` lists no entry point, because the stylesheet path differs per project. Without `settings.tailwindcss.entryPoint` in your root config, every file reports that the design system is unavailable. The rules need Tailwind CSS v4.1.15 or newer installed in the project.
 - `tailwind.json` loads `oxlint-tailwindcss` by package name, so it resolves from your project's `node_modules`, not from `oxc/`.
 - The `$schema` line in each preset points at `./node_modules/...`, which does not exist next to `oxc/`. oxlint ignores it; only editor completion in those files is lost.
@@ -995,6 +997,34 @@ Good:
 
 ```ts
 export const timeoutMs = 5000;
+```
+
+#### `comments/adr-only`
+
+No comments, except a short `// ADR-012: reason` where the code makes a deliberate choice, and directives for tools such as `oxlint-disable-next-line` or `@ts-expect-error`.
+
+**Why:** Code should explain itself through names and small functions. Where it does something on purpose that looks wrong, an agent or a teammate will "fix" it; a one-line pointer to the ADR stops that and leaves the full reasoning in the ADR.
+
+The comment starts with `ADR-`, a number, a colon and the reason. Also allowed: `oxlint-`/`eslint-disable` and `-enable`, `@ts-expect-error`, `/// <reference>`, `oxfmt-ignore`/`prettier-ignore`, `@vitest-environment`/`@jest-environment` and `c8`/`v8`/`istanbul ignore`. JSDoc is not allowed. A project can allow more with `["error", { "allow": ["^@license"] }]`: each entry is a regular expression tested against the comment text.
+
+Bad:
+
+```ts
+export function retryDelayMs(): number {
+  // wait a fixed second, backoff overloads the payment provider
+  return 1000;
+}
+```
+
+Good:
+
+```ts
+const FIXED_RETRY_DELAY_MS = 1000;
+
+export function retryDelayMs(): number {
+  // ADR-014: a fixed delay, because backoff bursts overload the payment provider
+  return FIXED_RETRY_DELAY_MS;
+}
 ```
 
 ### Functions
