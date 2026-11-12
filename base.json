@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc", "import"],
-  "jsPlugins": ["./plugins/paragraphs.ts"],
+  "jsPlugins": ["./plugins/paragraphs.ts", "./plugins/comments.ts"],
   "categories": { "correctness": "error" },
   "rules": {
     "import/no-cycle": "error",
@@ -30,6 +30,7 @@
     "unicorn/no-unreadable-array-destructuring": "error",
     "unicorn/no-unreadable-iife": "error",
     "eslint/no-inline-comments": "error",
+    "comments/adr-only": "error",
     "eslint/no-nested-ternary": "error",
     "eslint/complexity": ["error", { "max": 15 }],
     "eslint/max-lines-per-function": ["error", { "max": 100, "skipBlankLines": true, "skipComments": true }],
