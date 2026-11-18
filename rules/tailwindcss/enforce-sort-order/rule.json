@@ -1,0 +1,5 @@
+{
+  "group": "Turned off",
+  "summary": "Off. Sort classes with oxfmt instead.",
+  "why": "oxfmt's `sortTailwindcss` option sorts classes when it formats, the same way, so the lint rule would only report what the formatter fixes."
+}

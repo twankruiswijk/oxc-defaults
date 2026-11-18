@@ -1,0 +1,5 @@
+{
+  "group": "Consistent classes",
+  "summary": "Use the shorthand when all sides or axes share a value: `p-2`, not `px-2 py-2`. Auto-fixable.",
+  "why": "Shorter class lists, and a later change touches one class instead of two."
+}

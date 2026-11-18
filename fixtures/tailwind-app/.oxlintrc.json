@@ -1,0 +1,7 @@
+{
+  "extends": ["./oxc/base.json", "./oxc/react.json", "./oxc/tailwind.json"],
+  "settings": {
+    "tailwindcss": { "entryPoint": "src/styles.css" }
+  },
+  "rules": {}
+}

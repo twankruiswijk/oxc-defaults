@@ -1,0 +1,5 @@
+{
+  "group": "Modern classes",
+  "summary": "The minus sign of a negative arbitrary value goes inside the brackets: `top-[-5px]`, not `-top-[5px]`. Auto-fixable.",
+  "why": "One way to write it, the way Tailwind v4 documents it."
+}

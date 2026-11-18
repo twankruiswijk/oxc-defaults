@@ -8,13 +8,50 @@ Shared oxlint and oxfmt settings for TypeScript projects, with a bad and a good 
 | --- | --- | --- |
 | `base.json` | Every TypeScript project | The base rules, oxlint's `correctness`, `suspicious` and `perf` categories, and the `paragraphs/*` whitespace plugin |
 | `react.json` | React projects, on top of `base.json` | Hooks, list keys, JSX style and accessibility rules, plus the categories above for the `react` and `jsx-a11y` plugins |
+| `tailwind.json` | Tailwind CSS v4 projects, on top of `base.json` | Class rules from `oxlint-tailwindcss` that read your theme: unknown, conflicting, deprecated and hardcoded-color classes, and one canonical way to write each class |
 | `strict.json` | Opt-in, on top of `base.json` | Named exports only, no barrel files, kebab-case file names |
 
 A project lists the presets it needs in `extends` and puts its own rules on top. oxlint merges `extends` first to last, and the project's own `rules` win over all of them.
 
 ## Use them in a project
 
-Pin a release tag, so a change here never lands in your project unannounced. Pick one from the [releases](https://github.com/twankruiswijk/oxc-defaults/tags), and download the presets into an `oxc/` folder:
+Pin a release tag, so a change here never lands in your project unannounced. Pick one from the [releases](https://github.com/twankruiswijk/oxc-defaults/tags).
+
+### With the init script
+
+`scripts/init.ts` downloads the presets you pick into `oxc/` and writes `.oxlintrc.json` and `.oxfmtrc.json` in the project root. It needs Node 22.18 or newer.
+
+```sh
+V=v1.1.0
+curl -fsSL -o /tmp/oxc-init.ts https://raw.githubusercontent.com/twankruiswijk/oxc-defaults/$V/scripts/init.ts
+node /tmp/oxc-init.ts --version $V --react --tailwind src/styles.css
+```
+
+| Flag | Does |
+| --- | --- |
+| `--version <tag>` | The release to download. Required. |
+| `--react` | Adds `react.json`. |
+| `--tailwind <stylesheet>` | Adds `tailwind.json`, sets `settings.tailwindcss.entryPoint` to the stylesheet with `@import "tailwindcss"`, and turns on oxfmt's class sorting for it. |
+| `--strict` | Adds `strict.json`. |
+| `--recipe <name>` | Writes a project choice into your own `.oxlintrc.json`. Repeat it for several. |
+| `--force` | Replaces an existing `.oxlintrc.json` and `.oxfmtrc.json`. Without it they are kept, so rerunning with a new `--version` only refreshes `oxc/`. |
+
+Recipes are choices that differ per project, so no preset sets them. Run with `--help` for the list:
+
+| Recipe | Needs | Rule |
+| --- | --- | --- |
+| `arrow-components` | `--react` | Components are arrow functions instead of function declarations (`react/function-component-definition`). |
+| `no-inline-styles` | `--react` | No `style` prop on DOM elements (`react/forbid-dom-props`). |
+| `no-raw-controls` | `--react` | No raw `<button>` and `<input>`, so apps use the design-system components (`react/forbid-elements`). |
+| `no-text-literals` | `--react` | No hardcoded text in JSX, so every string goes through translations (`react/jsx-no-literals`). |
+| `no-arbitrary-values` | `--tailwind` | No arbitrary values such as `w-[13px]` (`tailwindcss/no-arbitrary-value`). |
+| `theme-colors-only` | `--tailwind` | No colors from Tailwind's default palette, only your theme's (`tailwindcss/no-default-palette`). |
+
+The script prints the packages to install and the `package.json` scripts to add. A recipe only writes rules, so change or scope them in `.oxlintrc.json` afterwards, for example with an `overrides` entry that limits `no-raw-controls` to your apps.
+
+### By hand
+
+Download the presets into an `oxc/` folder:
 
 ```sh
 V=v1.0.0
@@ -54,6 +91,22 @@ and extend both, base first:
 
 For the strict layer, download `strict.json` the same way and add `"./oxc/strict.json"` to `extends`.
 
+### Tailwind app
+
+Download `tailwind.json` the same way, install `oxlint-tailwindcss`, extend it after the others and point the plugin at the stylesheet that has `@import "tailwindcss"`:
+
+```json
+{
+  "extends": ["./oxc/base.json", "./oxc/react.json", "./oxc/tailwind.json"],
+  "settings": {
+    "tailwindcss": { "entryPoint": "src/styles.css" }
+  },
+  "rules": {}
+}
+```
+
+Sort classes with oxfmt rather than the lint rule: add `"sortTailwindcss": { "stylesheet": "src/styles.css" }` to `.oxfmtrc.json`.
+
 ### Tools and scripts
 
 ```sh
@@ -79,6 +132,8 @@ To upgrade, change `V` and run the downloads again.
 - In `*.test.*` and `*.spec.*` files (`.ts` and `.tsx`), `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
 - The `paragraphs/*` rules come from `plugins/paragraphs.ts`, an oxlint JS plugin. oxlint has no built-in rule for blank lines between statements, and oxfmt keeps the blank lines you write but never adds one. The plugin runs on Node 22.18 or newer, since it is TypeScript. JS plugins are still alpha in oxlint, so pin the oxlint version. `oxlint --fix` adds every missing blank line these rules report.
 - The plugin only imports types from `@oxlint/plugins`. If your `tsconfig.json` type-checks `oxc/plugins/`, add `@oxlint/plugins` as a dev dependency or exclude the folder.
+- `tailwind.json` lists no entry point, because the stylesheet path differs per project. Without `settings.tailwindcss.entryPoint` in your root config, every file reports that the design system is unavailable. The rules need Tailwind CSS v4.1.15 or newer installed in the project.
+- `tailwind.json` loads `oxlint-tailwindcss` by package name, so it resolves from your project's `node_modules`, not from `oxc/`.
 - The `$schema` line in each preset points at `./node_modules/...`, which does not exist next to `oxc/`. oxlint ignores it; only editor completion in those files is lost.
 
 ## Formatting
@@ -89,7 +144,7 @@ To upgrade, change `V` and run the downloads again.
 
 ## Changing a rule
 
-1. Change the rule in the preset it belongs to: `base.json`, `react.json` or `strict.json`. A rule is set in one preset only.
+1. Change the rule in the preset it belongs to: `base.json`, `react.json`, `tailwind.json` or `strict.json`. A rule is set in one preset only.
 2. Add or update its folder `rules/<plugin>/<rule>/`. `rule.json` holds the group, summary and why. `bad.ts` and `good.ts` hold the examples (`bad.tsx` and `good.tsx` for React rules); use `bad/` and `good/` folders when an example needs several files.
 3. Run `pnpm readme` to regenerate the rule list below, then `pnpm check` and `pnpm fixtures`.
 
@@ -97,7 +152,11 @@ To switch off a rule that a category turns on, set it to `"off"` and give it a `
 
 `pnpm check` lints each example with the preset that sets its rule, on top of `base.json`. It fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. Examples may call functions they never declare, to stay short; the check ignores `no-unsafe-*` reports about such undeclared values, since those come from the missing declaration, not from `any`. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
 
-`pnpm fixtures` copies the presets into `oxc/` inside each project in `fixtures/`, the way the recipes above do, lints it and compares the result with its `expected.json`. `fixtures/ts-app` extends `base.json`; `fixtures/react-app` extends `base.json` and `react.json`. CI runs both scripts on every push and pull request.
+Every example folder gets a `styles.css` with `@import "tailwindcss"` and one theme color, `--color-brand`, so Tailwind examples can use `bg-brand` and `text-brand`.
+
+`pnpm fixtures` copies the presets into `oxc/` inside each project in `fixtures/`, the way the recipes above do, lints it and compares the result with its `expected.json`. `fixtures/ts-app` extends `base.json`; `fixtures/react-app` extends `base.json` and `react.json`; `fixtures/tailwind-app` adds `tailwind.json` with its entry point.
+
+`pnpm init:check` runs the init script from this checkout in an empty project, once with no flags and once with every flag and recipe, and checks that oxlint loads the result and that each recipe rule fires. CI runs all three scripts on every push and pull request.
 
 ## Lint rules
 
@@ -2097,6 +2156,382 @@ Off, although the `suspicious` category turns it on.
 Off, although the `suspicious` category turns it on.
 
 **Why:** It checks the same hook calls as `react/rules-of-hooks`, so every mistake would be reported twice.
+
+## Tailwind rules
+
+Set in `tailwind.json`, on top of `base.json` (and `react.json`) in projects on Tailwind CSS v4. The rules come from the `oxlint-tailwindcss` plugin and read your design system from the stylesheet that `settings.tailwindcss.entryPoint` names in your root config.
+
+### Classes
+
+#### `tailwindcss/no-conflicting-classes`
+
+No two classes on one element that set the same CSS property, such as `flex` and `block`.
+
+**Why:** Which one wins depends on the order in the generated stylesheet, not the order you wrote, so the element rarely looks the way the class list reads.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="flex block gap-2">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="flex gap-2">New</span>;
+}
+```
+
+#### `tailwindcss/no-contradicting-variants`
+
+No variant class that repeats what the same element already sets without the variant, such as `font-bold hover:font-bold`.
+
+**Why:** The variant does nothing, but it reads as if the style only applies on hover, which misleads the next reader.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="font-bold hover:font-bold">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="font-bold">New</span>;
+}
+```
+
+#### `tailwindcss/no-dark-without-light`
+
+A `dark:` class comes with a base class for the same property, such as `bg-white dark:bg-black`.
+
+**Why:** Without the base class, light mode shows whatever the element inherits, which is easy to miss when you build in dark mode.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="dark:bg-black">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="bg-white dark:bg-black">New</span>;
+}
+```
+
+#### `tailwindcss/no-duplicate-classes`
+
+No class listed twice on one element. Auto-fixable.
+
+**Why:** A duplicate does nothing and makes the list longer to read and harder to change.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="p-4 text-sm p-4">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="p-4 text-sm">New</span>;
+}
+```
+
+#### `tailwindcss/no-dynamic-classes`
+
+No class names built at runtime, such as `` `p-${size}` ``.
+
+**Why:** Tailwind scans the source for complete class names. A name built at runtime never appears whole, so Tailwind generates no CSS for it and the style silently disappears.
+
+Map each value to its full class name instead.
+
+Bad:
+
+```tsx
+export function Box({ size }: { size: 2 | 4 }) {
+  return <div className={`p-${size}`}>Content</div>;
+}
+```
+
+Good:
+
+```tsx
+const PADDING = { 2: 'p-2', 4: 'p-4' } as const;
+
+export function Box({ size }: { size: 2 | 4 }) {
+  return <div className={PADDING[size]}>Content</div>;
+}
+```
+
+#### `tailwindcss/no-unknown-classes`
+
+Every class exists in the design system that the entry point stylesheet defines.
+
+**Why:** A typo or a removed token generates no CSS and no error. The rule reads your theme, so it also catches tokens that do not exist in your project.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="text-brnd">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="text-brand">New</span>;
+}
+```
+
+### Modern classes
+
+#### `tailwindcss/no-deprecated-classes`
+
+No classes that Tailwind v4 deprecated, such as `flex-grow` (now `grow`). Auto-fixable.
+
+**Why:** Deprecated classes are removed in a later major version, and the new names are shorter.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <div className="flex flex-grow">New</div>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <div className="flex grow">New</div>;
+}
+```
+
+#### `tailwindcss/enforce-canonical`
+
+Classes use the canonical form Tailwind itself would write, such as `h-full` instead of `h-[100%]`. Auto-fixable.
+
+**Why:** One spelling per style makes classes searchable and keeps reviews about the design, not the syntax.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="h-[100%]">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="h-full">New</span>;
+}
+```
+
+#### `tailwindcss/no-unnecessary-arbitrary-value`
+
+No arbitrary value where a theme class gives the same CSS, such as `text-[var(--color-brand)]` for `text-brand`. Auto-fixable.
+
+**Why:** An arbitrary value hides that the design system already has this step, so it drifts the moment the scale changes.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="text-[var(--color-brand)]">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="text-brand">New</span>;
+}
+```
+
+#### `tailwindcss/enforce-negative-arbitrary-values`
+
+The minus sign of a negative arbitrary value goes inside the brackets: `top-[-5px]`, not `-top-[5px]`. Auto-fixable.
+
+**Why:** One way to write it, the way Tailwind v4 documents it.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="relative -top-[5px]">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="relative top-[-5px]">New</span>;
+}
+```
+
+### Consistent classes
+
+#### `tailwindcss/enforce-shorthand`
+
+Use the shorthand when all sides or axes share a value: `p-2`, not `px-2 py-2`. Auto-fixable.
+
+**Why:** Shorter class lists, and a later change touches one class instead of two.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="px-2 py-2">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="p-2">New</span>;
+}
+```
+
+#### `tailwindcss/consistent-variant-order`
+
+Stacked variants are written in one order, such as `dark:hover:` everywhere instead of mixing it with `hover:dark:`. Auto-fixable.
+
+**Why:** The same style written two ways looks like two different styles and defeats search.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="bg-white hover:dark:bg-black">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="bg-white dark:hover:bg-black">New</span>;
+}
+```
+
+#### `tailwindcss/enforce-consistent-important-position`
+
+The important modifier goes at the end: `font-bold!`, not `!font-bold`. Auto-fixable.
+
+**Why:** Tailwind v4 writes it as a suffix; one position keeps classes searchable.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="!font-bold">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="font-bold!">New</span>;
+}
+```
+
+#### `tailwindcss/enforce-consistent-variable-syntax`
+
+CSS variables use the v4 shorthand: `bg-(--accent)`, not `bg-[var(--accent)]`. Auto-fixable.
+
+**Why:** One way to write it, and the shorthand is the form Tailwind v4 documents.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="bg-[var(--accent)]">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="bg-(--accent)">New</span>;
+}
+```
+
+#### `tailwindcss/no-unnecessary-whitespace`
+
+Classes are separated by single spaces, with none at the start or end. Auto-fixable.
+
+**Why:** Extra spaces make diffs noisy and class lists harder to compare.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className=" flex  gap-2 ">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="flex gap-2">New</span>;
+}
+```
+
+### Design tokens
+
+#### `tailwindcss/no-hardcoded-colors`
+
+No hardcoded color values in classes, such as `text-[#0055ff]`. Use a theme color.
+
+**Why:** Colors belong in the theme, so a brand change is one edit and dark mode or contrast fixes reach every use.
+
+Bad:
+
+```tsx
+export function Badge() {
+  return <span className="text-[#ff0000]">New</span>;
+}
+```
+
+Good:
+
+```tsx
+export function Badge() {
+  return <span className="text-brand">New</span>;
+}
+```
+
+### Turned off
+
+#### `tailwindcss/enforce-sort-order`
+
+Off. Sort classes with oxfmt instead.
+
+**Why:** oxfmt's `sortTailwindcss` option sorts classes when it formats, the same way, so the lint rule would only report what the formatter fixes.
 
 ## Strict rules
 

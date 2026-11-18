@@ -1,0 +1,3 @@
+{
+  "src/broken.tsx": ["tailwindcss/no-conflicting-classes", "tailwindcss/no-dark-without-light", "tailwindcss/no-hardcoded-colors"]
+}

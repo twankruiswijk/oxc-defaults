@@ -1,0 +1,5 @@
+{
+  "group": "Modern classes",
+  "summary": "No arbitrary value where a theme class gives the same CSS, such as `text-[var(--color-brand)]` for `text-brand`. Auto-fixable.",
+  "why": "An arbitrary value hides that the design system already has this step, so it drifts the moment the scale changes."
+}

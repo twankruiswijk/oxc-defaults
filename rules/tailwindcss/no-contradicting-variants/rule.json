@@ -1,0 +1,5 @@
+{
+  "group": "Classes",
+  "summary": "No variant class that repeats what the same element already sets without the variant, such as `font-bold hover:font-bold`.",
+  "why": "The variant does nothing, but it reads as if the style only applies on hover, which misleads the next reader."
+}

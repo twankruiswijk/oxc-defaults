@@ -12,6 +12,7 @@ export interface LintConfig {
   plugins: string[];
   categories: unknown;
   jsPlugins: string[];
+  settings: object;
   rules: Map<string, unknown>;
   overrides: unknown[];
 }
@@ -55,6 +56,13 @@ export const PRESETS: readonly Preset[] = [
       '`react.json`, on top of `base.json` in React projects. It also turns on the `correctness`, `suspicious` and `perf` rules of the `react` and `jsx-a11y` plugins.',
   },
   {
+    name: 'tailwind',
+    file: 'tailwind.json',
+    title: 'Tailwind rules',
+    intro:
+      '`tailwind.json`, on top of `base.json` (and `react.json`) in projects on Tailwind CSS v4. The rules come from the `oxlint-tailwindcss` plugin and read your design system from the stylesheet that `settings.tailwindcss.entryPoint` names in your root config.',
+  },
+  {
     name: 'strict',
     file: 'strict.json',
     title: 'Strict rules',
@@ -75,11 +83,13 @@ export function readPreset(preset: Preset): LintConfig {
   }
 
   const overrides = 'overrides' in parsed && Array.isArray(parsed.overrides) ? parsed.overrides : [];
+  const settings = 'settings' in parsed && typeof parsed.settings === 'object' && parsed.settings !== null ? parsed.settings : {};
 
   return {
     plugins: parsed.plugins,
     categories: 'categories' in parsed ? parsed.categories : undefined,
-    jsPlugins: jsPlugins.map((path) => resolve(REPO_ROOT, path)),
+    jsPlugins: jsPlugins.map((plugin) => (plugin.startsWith('.') ? resolve(REPO_ROOT, plugin) : plugin)),
+    settings,
     rules: new Map(Object.entries(parsed.rules)),
     overrides,
   };
@@ -97,6 +107,7 @@ export function layeredConfig(preset: Preset): LintConfig {
     plugins: [...new Set([...base.plugins, ...layer.plugins])],
     categories: layer.categories ?? base.categories,
     jsPlugins: [...new Set([...base.jsPlugins, ...layer.jsPlugins])],
+    settings: { ...base.settings, ...layer.settings },
     rules: new Map([...base.rules, ...layer.rules]),
     overrides: [...base.overrides, ...layer.overrides],
   };

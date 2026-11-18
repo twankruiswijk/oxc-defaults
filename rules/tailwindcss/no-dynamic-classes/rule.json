@@ -1,0 +1,6 @@
+{
+  "group": "Classes",
+  "summary": "No class names built at runtime, such as `` `p-${size}` ``.",
+  "why": "Tailwind scans the source for complete class names. A name built at runtime never appears whole, so Tailwind generates no CSS for it and the style silently disappears.",
+  "note": "Map each value to its full class name instead."
+}

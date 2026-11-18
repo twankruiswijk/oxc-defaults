@@ -1,0 +1,5 @@
+{
+  "group": "Design tokens",
+  "summary": "No hardcoded color values in classes, such as `text-[#0055ff]`. Use a theme color.",
+  "why": "Colors belong in the theme, so a brand change is one edit and dark mode or contrast fixes reach every use."
+}

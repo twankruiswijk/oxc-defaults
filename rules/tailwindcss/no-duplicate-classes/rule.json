@@ -1,0 +1,5 @@
+{
+  "group": "Classes",
+  "summary": "No class listed twice on one element. Auto-fixable.",
+  "why": "A duplicate does nothing and makes the list longer to read and harder to change."
+}

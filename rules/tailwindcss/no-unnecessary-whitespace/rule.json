@@ -1,0 +1,5 @@
+{
+  "group": "Consistent classes",
+  "summary": "Classes are separated by single spaces, with none at the start or end. Auto-fixable.",
+  "why": "Extra spaces make diffs noisy and class lists harder to compare."
+}

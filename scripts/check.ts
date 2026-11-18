@@ -36,6 +36,10 @@ const EXAMPLE_TSCONFIG = {
   include: ['**/*.ts', '**/*.tsx'],
 };
 
+const EXAMPLE_STYLESHEET = 'styles.css';
+const EXAMPLE_STYLESHEET_CSS = '@import "tailwindcss";\n\n@theme {\n  --color-brand: #0055ff;\n}\n';
+const EXAMPLE_SETTINGS = { tailwindcss: { entryPoint: EXAMPLE_STYLESHEET } };
+
 const configs = new Map<Preset, LintConfig>(PRESETS.map((preset) => [preset, layeredConfig(preset)]));
 const docs = readRuleDocs();
 const problems: string[] = [];
@@ -86,11 +90,13 @@ function exampleProblems(doc: RuleDoc, lintConfig: LintConfig): string[] {
     plugins: lintConfig.plugins,
     jsPlugins: lintConfig.jsPlugins,
     categories: { correctness: 'off' },
+    settings: { ...lintConfig.settings, ...EXAMPLE_SETTINGS },
     rules: { [doc.rule]: ruleSetting },
   };
   const everyRule = {
     plugins: lintConfig.plugins,
     jsPlugins: lintConfig.jsPlugins,
+    settings: { ...lintConfig.settings, ...EXAMPLE_SETTINGS },
     categories: lintConfig.categories,
     rules: { ...Object.fromEntries(lintConfig.rules), [doc.rule]: ruleSetting },
     overrides: lintConfig.overrides,
@@ -155,6 +161,7 @@ function writeExampleFolder(folder: string, files: readonly ExampleFile[], lintC
     writeFileSync(join(folder, file.name), file.code);
   }
   writeFileSync(join(folder, 'tsconfig.json'), JSON.stringify(EXAMPLE_TSCONFIG));
+  writeFileSync(join(folder, EXAMPLE_STYLESHEET), EXAMPLE_STYLESHEET_CSS);
   writeFileSync(join(folder, 'oxlintrc.json'), JSON.stringify(lintConfig));
 }
 

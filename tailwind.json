@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "rules": {
+    "tailwindcss/no-conflicting-classes": "error",
+    "tailwindcss/no-contradicting-variants": "error",
+    "tailwindcss/no-dark-without-light": "error",
+    "tailwindcss/no-duplicate-classes": "error",
+    "tailwindcss/no-dynamic-classes": "error",
+    "tailwindcss/no-unknown-classes": "error",
+    "tailwindcss/no-deprecated-classes": "error",
+    "tailwindcss/enforce-canonical": "error",
+    "tailwindcss/no-unnecessary-arbitrary-value": "error",
+    "tailwindcss/enforce-negative-arbitrary-values": "error",
+    "tailwindcss/enforce-shorthand": "error",
+    "tailwindcss/consistent-variant-order": "error",
+    "tailwindcss/enforce-consistent-important-position": "error",
+    "tailwindcss/enforce-consistent-variable-syntax": "error",
+    "tailwindcss/no-unnecessary-whitespace": "error",
+    "tailwindcss/no-hardcoded-colors": "error",
+    "tailwindcss/enforce-sort-order": "off"
+  }
+}
