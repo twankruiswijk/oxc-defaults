@@ -1,0 +1,5 @@
+{
+  "group": "Classes",
+  "summary": "Every class exists in the design system that the entry point stylesheet defines.",
+  "why": "A typo or a removed token generates no CSS and no error. The rule reads your theme, so it also catches tokens that do not exist in your project."
+}

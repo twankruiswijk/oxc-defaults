@@ -1,0 +1,5 @@
+{
+  "group": "Classes",
+  "summary": "No two classes on one element that set the same CSS property, such as `flex` and `block`.",
+  "why": "Which one wins depends on the order in the generated stylesheet, not the order you wrote, so the element rarely looks the way the class list reads."
+}

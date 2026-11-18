@@ -26,3 +26,4 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm check
       - run: pnpm fixtures
+      - run: pnpm init:check

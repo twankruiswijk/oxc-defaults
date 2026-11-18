@@ -1,0 +1,5 @@
+{
+  "group": "Classes",
+  "summary": "A `dark:` class comes with a base class for the same property, such as `bg-white dark:bg-black`.",
+  "why": "Without the base class, light mode shows whatever the element inherits, which is easy to miss when you build in dark mode."
+}

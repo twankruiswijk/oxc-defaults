@@ -1,0 +1,5 @@
+{
+  "group": "Consistent classes",
+  "summary": "Stacked variants are written in one order, such as `dark:hover:` everywhere instead of mixing it with `hover:dark:`. Auto-fixable.",
+  "why": "The same style written two ways looks like two different styles and defeats search."
+}

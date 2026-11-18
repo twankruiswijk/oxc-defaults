@@ -1,0 +1,5 @@
+{
+  "group": "Consistent classes",
+  "summary": "CSS variables use the v4 shorthand: `bg-(--accent)`, not `bg-[var(--accent)]`. Auto-fixable.",
+  "why": "One way to write it, and the shorthand is the form Tailwind v4 documents."
+}

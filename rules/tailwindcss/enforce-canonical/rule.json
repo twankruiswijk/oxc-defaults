@@ -1,0 +1,5 @@
+{
+  "group": "Modern classes",
+  "summary": "Classes use the canonical form Tailwind itself would write, such as `h-full` instead of `h-[100%]`. Auto-fixable.",
+  "why": "One spelling per style makes classes searchable and keeps reviews about the design, not the syntax."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Modern classes",
+  "summary": "No classes that Tailwind v4 deprecated, such as `flex-grow` (now `grow`). Auto-fixable.",
+  "why": "Deprecated classes are removed in a later major version, and the new names are shorter."
+}

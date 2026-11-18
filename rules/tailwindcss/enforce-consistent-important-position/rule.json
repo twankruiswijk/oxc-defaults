@@ -1,0 +1,5 @@
+{
+  "group": "Consistent classes",
+  "summary": "The important modifier goes at the end: `font-bold!`, not `!font-bold`. Auto-fixable.",
+  "why": "Tailwind v4 writes it as a suffix; one position keeps classes searchable."
+}
