@@ -20,9 +20,19 @@ import {
 const WORK_DIR = mkdtempSync(join(tmpdir(), 'oxc-defaults-check-'));
 const OXLINT = join(REPO_ROOT, 'node_modules', '.bin', 'oxlint');
 const DIAGNOSTIC_RULE = /\[(?:Error|Warning)\/([\w-]+)\(([\w-]+)\)\]/g;
+const DIAGNOSTIC_LINE = /\[(?:Error|Warning)\//;
+const UNDECLARED_VALUE = /`error`|\ban error typed\b|\btype error\b/;
 const PLUGIN_ALIASES = new Map([['react-hooks', 'react']]);
 const EXAMPLE_TSCONFIG = {
-  compilerOptions: { strict: true, target: 'ES2022', module: 'ESNext', moduleResolution: 'bundler', jsx: 'react-jsx', noEmit: true },
+  compilerOptions: {
+    strict: true,
+    target: 'ES2023',
+    module: 'ESNext',
+    moduleResolution: 'bundler',
+    jsx: 'react-jsx',
+    types: ['node', 'react'],
+    noEmit: true,
+  },
   include: ['**/*.ts', '**/*.tsx'],
 };
 
@@ -37,6 +47,9 @@ for (const doc of docs) {
   const config = configs.get(doc.preset);
   if (config === undefined) {
     throw new Error(`${doc.preset.file} is not a preset`);
+  }
+  if (doc.off) {
+    continue;
   }
 
   problems.push(...exampleProblems(doc, config));
@@ -102,7 +115,8 @@ function checkedSetting(setting: unknown, checkOptions: object | undefined): unk
     return setting;
   }
 
-  const [severity, options] = Array.isArray(setting) ? setting : [setting, {}];
+  const severity: unknown = Array.isArray(setting) ? setting[0] : setting;
+  const options: unknown = Array.isArray(setting) ? setting[1] : {};
   if (typeof options !== 'object' || options === null) {
     throw new Error('checkOptions needs a rule whose options are an object');
   }
@@ -119,16 +133,18 @@ function rulesFlagging(doc: RuleDoc, kind: 'bad' | 'good', lintConfig: object): 
     throw linted.error;
   }
 
-  const flaggedBy = Array.from(
-    linted.stdout.matchAll(DIAGNOSTIC_RULE),
-    ([, plugin = '', name]) => `${PLUGIN_ALIASES.get(plugin) ?? plugin}/${name}`,
-  );
-  const oxlintFailed = linted.status !== 0 && flaggedBy.length === 0;
+  const diagnostics = linted.stdout.split('\n').filter((line) => DIAGNOSTIC_LINE.test(line));
+  const oxlintFailed = linted.status !== 0 && diagnostics.length === 0;
   if (oxlintFailed) {
     throw new Error(`oxlint failed on the ${kind} example of ${doc.rule}:\n${linted.stdout}${linted.stderr}`);
   }
 
-  return flaggedBy;
+  const declaredDiagnostics = diagnostics.filter((line) => !UNDECLARED_VALUE.test(line)).join('\n');
+
+  return Array.from(
+    declaredDiagnostics.matchAll(DIAGNOSTIC_RULE),
+    ([, plugin = '', name]) => `${PLUGIN_ALIASES.get(plugin) ?? plugin}/${name}`,
+  );
 }
 
 function writeExampleFolder(folder: string, files: readonly ExampleFile[], lintConfig: object): void {

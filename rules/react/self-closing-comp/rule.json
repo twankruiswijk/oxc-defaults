@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "An element without children closes itself.",
+  "why": "`<Spinner />` says there is nothing inside at a glance; `<Spinner></Spinner>` makes you look for children."
+}

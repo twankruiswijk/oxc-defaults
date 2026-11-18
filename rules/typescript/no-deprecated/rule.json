@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No use of anything marked `@deprecated`. Needs `--type-aware`.",
+  "why": "A deprecated API is scheduled to go away. Catching it at lint time turns a future breaking upgrade into a small change now."
+}

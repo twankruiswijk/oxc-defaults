@@ -1,0 +1,5 @@
+{
+  "group": "Imports",
+  "summary": "A module is imported once per file.",
+  "why": "Two imports from the same module split one dependency over two lines, so it is easy to miss one when moving or removing it. With `consistent-type-imports`, types join the same import inline."
+}

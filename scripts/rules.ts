@@ -24,6 +24,7 @@ export interface ExampleFile {
 export interface RuleDoc {
   rule: string;
   preset: Preset;
+  off: boolean;
   group: string;
   summary: string;
   why: string;
@@ -51,7 +52,7 @@ export const PRESETS: readonly Preset[] = [
     file: 'react.json',
     title: 'React rules',
     intro:
-      '`react.json`, on top of `base.json` in React projects. It also turns on the correctness rules of the `react` and `jsx-a11y` plugins.',
+      '`react.json`, on top of `base.json` in React projects. It also turns on the `correctness`, `suspicious` and `perf` rules of the `react` and `jsx-a11y` plugins.',
   },
   {
     name: 'strict',
@@ -106,14 +107,14 @@ export function readRuleDocs(): RuleDoc[] {
   const seen = new Map<string, Preset>();
 
   for (const preset of PRESETS) {
-    for (const rule of readPreset(preset).rules.keys()) {
+    for (const [rule, setting] of readPreset(preset).rules) {
       const earlier = seen.get(rule);
       if (earlier !== undefined) {
         throw new Error(`${rule} is set in both ${earlier.file} and ${preset.file}`);
       }
 
       seen.set(rule, preset);
-      docs.push(readRuleDoc(rule, preset));
+      docs.push(readRuleDoc(rule, preset, setting === 'off'));
     }
   }
 
@@ -156,7 +157,7 @@ interface RuleNotes {
   checkOptions?: object;
 }
 
-function readRuleDoc(rule: string, preset: Preset): RuleDoc {
+function readRuleDoc(rule: string, preset: Preset, off: boolean): RuleDoc {
   const folder = join(RULES_DIR, rule);
   const notesPath = join(folder, 'rule.json');
   if (!existsSync(notesPath)) {
@@ -171,13 +172,14 @@ function readRuleDoc(rule: string, preset: Preset): RuleDoc {
   return {
     rule,
     preset,
+    off,
     group: notes.group,
     summary: notes.summary,
     why: notes.why,
     note: notes.note,
     checkOptions: notes.checkOptions,
-    bad: readExample(folder, 'bad'),
-    good: readExample(folder, 'good'),
+    bad: off ? [] : readExample(folder, 'bad'),
+    good: off ? [] : readExample(folder, 'good'),
   };
 }
 
@@ -241,6 +243,10 @@ function renderRule(doc: RuleDoc): string {
   if (doc.note !== undefined) {
     lines.push('', doc.note);
   }
+  if (doc.off) {
+    return lines.join('\n');
+  }
+
   lines.push('', 'Bad:', '', codeBlock(doc.bad), '', 'Good:', '', codeBlock(doc.good));
 
   return lines.join('\n');

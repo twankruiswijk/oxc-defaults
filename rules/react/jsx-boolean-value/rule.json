@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "A `true` boolean prop is written by name only: `disabled`, not `disabled={true}`.",
+  "why": "One way to write it, the same way HTML does."
+}

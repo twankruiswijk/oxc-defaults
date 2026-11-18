@@ -6,8 +6,8 @@ Shared oxlint and oxfmt settings for TypeScript projects, with a bad and a good 
 
 | Preset | For | Adds |
 | --- | --- | --- |
-| `base.json` | Every TypeScript project | The base rules and the `paragraphs/*` whitespace plugin |
-| `react.json` | React projects, on top of `base.json` | Hooks, list keys and accessibility rules, plus the `react` and `jsx-a11y` correctness rules |
+| `base.json` | Every TypeScript project | The base rules, oxlint's `correctness`, `suspicious` and `perf` categories, and the `paragraphs/*` whitespace plugin |
+| `react.json` | React projects, on top of `base.json` | Hooks, list keys, JSX style and accessibility rules, plus the categories above for the `react` and `jsx-a11y` plugins |
 | `strict.json` | Opt-in, on top of `base.json` | Named exports only, no barrel files, kebab-case file names |
 
 A project lists the presets it needs in `extends` and puts its own rules on top. oxlint merges `extends` first to last, and the project's own `rules` win over all of them.
@@ -72,8 +72,8 @@ To upgrade, change `V` and run the downloads again.
 
 ## Gotchas
 
-- `--type-aware` needs `oxlint-tsgolint`. Without it, `no-unnecessary-condition` and `no-unsafe-type-assertion` do not run. Pass it on the command line: oxlint only reads `options.typeAware` from the root config, never from a preset in `extends`.
-- `base.json` sets oxlint's built-in correctness checks to errors, so they fail the run even without `--deny-warnings`. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
+- `--type-aware` needs `oxlint-tsgolint`. Without it, the rules marked "Needs `--type-aware`" below do not run, such as `no-unnecessary-condition`, `no-floating-promises` and the `no-unsafe-*` family. Pass it on the command line: oxlint only reads `options.typeAware` from the root config, never from a preset in `extends`.
+- `base.json` sets oxlint's built-in `correctness`, `suspicious` and `perf` checks to errors, so they fail the run even without `--deny-warnings`. A few rules those categories turn on are switched off again; they are listed under "Turned off" with the reason. Keep the flag anyway: it also fails the run on warnings from any rule you add as `"warn"`.
 - Paths inside a preset resolve from the preset's own folder. `jsPlugins` in `base.json` says `./plugins/paragraphs.ts`, so with `base.json` in `oxc/` the plugin lives in `oxc/plugins/`. The fixtures prove this.
 - A preset's `plugins` adds to the plugins of the presets before it; the fixtures prove `react.json` keeps base's `typescript` rules and `paragraphs/*` plugin. `react.json` still lists the full set, so it stays correct if oxlint ever switches to replacing. In your own `.oxlintrc.json`, leave `plugins` out unless you need another plugin, and then list them all: at the root, `plugins` replaces oxlint's default plugin list.
 - In `*.test.*` and `*.spec.*` files (`.ts` and `.tsx`), `max-lines-per-function` and `max-lines` are off, because a `describe` block and a test file are often longer than these limits.
@@ -93,13 +93,15 @@ To upgrade, change `V` and run the downloads again.
 2. Add or update its folder `rules/<plugin>/<rule>/`. `rule.json` holds the group, summary and why. `bad.ts` and `good.ts` hold the examples (`bad.tsx` and `good.tsx` for React rules); use `bad/` and `good/` folders when an example needs several files.
 3. Run `pnpm readme` to regenerate the rule list below, then `pnpm check` and `pnpm fixtures`.
 
-`pnpm check` lints each example with the preset that sets its rule, on top of `base.json`. It fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
+To switch off a rule that a category turns on, set it to `"off"` and give it a `rule.json` with the group `Turned off` and the reason; it needs no examples.
+
+`pnpm check` lints each example with the preset that sets its rule, on top of `base.json`. It fails when a bad example is not flagged, a good example is flagged by any rule, a rule has no folder, or this README is out of date. Examples may call functions they never declare, to stay short; the check ignores `no-unsafe-*` reports about such undeclared values, since those come from the missing declaration, not from `any`. A rule can set `"checkOptions"` in `rule.json` to lower its limits during the check only, so a short example can still prove the rule fires. The size limits use this.
 
 `pnpm fixtures` copies the presets into `oxc/` inside each project in `fixtures/`, the way the recipes above do, lints it and compares the result with its `expected.json`. `fixtures/ts-app` extends `base.json`; `fixtures/react-app` extends `base.json` and `react.json`. CI runs both scripts on every push and pull request.
 
 ## Lint rules
 
-Every rule below is an error. On top of these, oxlint runs the built-in correctness checks of every plugin a preset lists, also as errors.
+Every rule below is an error unless it is listed under "Turned off". On top of these, oxlint runs the built-in `correctness`, `suspicious` and `perf` checks of every plugin a preset lists, also as errors.
 
 <!-- rules:start -->
 
@@ -147,6 +149,53 @@ export const formatPrice = (cents: number): string => `EUR ${cents / 100}`;
 import { formatPrice } from './money';
 
 export const orderTotal = (cents: number): string => formatPrice(cents);
+```
+
+#### `import/no-duplicates`
+
+A module is imported once per file.
+
+**Why:** Two imports from the same module split one dependency over two lines, so it is easy to miss one when moving or removing it. With `consistent-type-imports`, types join the same import inline.
+
+Bad:
+
+```ts
+// label.ts
+import { formatPrice } from './money.ts';
+import { roundCents } from './money.ts';
+
+export function label(cents: number): string {
+  return formatPrice(roundCents(cents));
+}
+
+// money.ts
+export function formatPrice(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+
+export function roundCents(cents: number): number {
+  return Math.round(cents);
+}
+```
+
+Good:
+
+```ts
+// label.ts
+import { formatPrice, roundCents } from './money.ts';
+
+export function label(cents: number): string {
+  return formatPrice(roundCents(cents));
+}
+
+// money.ts
+export function formatPrice(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+
+export function roundCents(cents: number): number {
+  return Math.round(cents);
+}
 ```
 
 #### `typescript/consistent-type-imports`
@@ -261,6 +310,217 @@ export function toUser(value: unknown): User {
     throw new Error('Not a user');
   }
   return value;
+}
+```
+
+#### `typescript/no-unsafe-assignment`
+
+No `any` value assigned to a variable, property or destructured name. Needs `--type-aware`.
+
+**Why:** `no-explicit-any` stops you writing `any`, but `JSON.parse`, `catch` and untyped libraries still hand it to you. Assigning it spreads unchecked values through typed code.
+
+Bad:
+
+```ts
+export function readSettings(text: string): Settings {
+  const settings = JSON.parse(text);
+
+  return settings;
+}
+
+interface Settings {
+  theme: string;
+}
+```
+
+Good:
+
+```ts
+export function readSettings(text: string): Settings {
+  const parsed: unknown = JSON.parse(text);
+  if (!isSettings(parsed)) {
+    throw new Error('Settings need a theme');
+  }
+
+  return parsed;
+}
+
+interface Settings {
+  theme: string;
+}
+
+function isSettings(value: unknown): value is Settings {
+  return typeof value === 'object' && value !== null && 'theme' in value && typeof value.theme === 'string';
+}
+```
+
+#### `typescript/no-unsafe-call`
+
+No calling a value typed `any`. Needs `--type-aware`.
+
+**Why:** TypeScript cannot check a call on `any`: a missing function or wrong arguments only fail at runtime.
+
+Bad:
+
+```ts
+export function notify(handlers: Record<string, any>, event: string): void {
+  handlers[event]();
+}
+```
+
+Good:
+
+```ts
+export function notify(handlers: ReadonlyMap<string, () => void>, event: string): void {
+  const handler = handlers.get(event);
+  if (handler === undefined) {
+    return;
+  }
+
+  handler();
+}
+```
+
+#### `typescript/no-unsafe-member-access`
+
+No reading a property of a value typed `any`. Needs `--type-aware`.
+
+**Why:** Every property of `any` is `any` again, so a typo or a changed API is never caught.
+
+Bad:
+
+```ts
+export async function orderTotal(response: Response): Promise<number> {
+  const body = (await response.json()) as any;
+
+  return body.total;
+}
+```
+
+Good:
+
+```ts
+export async function orderTotal(response: Response): Promise<number> {
+  const body: unknown = await response.json();
+  if (typeof body !== 'object' || body === null || !('total' in body) || typeof body.total !== 'number') {
+    throw new Error('Order response has no total');
+  }
+
+  return body.total;
+}
+```
+
+#### `typescript/no-unsafe-return`
+
+No returning a value typed `any` from a typed function. Needs `--type-aware`.
+
+**Why:** The return type promises a shape the function never checked, so callers trust a value that may be anything.
+
+Bad:
+
+```ts
+export function readCount(text: string): number {
+  return JSON.parse(text);
+}
+```
+
+Good:
+
+```ts
+export function readCount(text: string): number {
+  const parsed: unknown = JSON.parse(text);
+  if (typeof parsed !== 'number') {
+    throw new Error('Count is not a number');
+  }
+
+  return parsed;
+}
+```
+
+#### `typescript/no-unsafe-argument`
+
+No passing a value typed `any` as an argument. Needs `--type-aware`.
+
+**Why:** The parameter type looks checked, but an `any` argument skips the check, so the function receives values its type rules out.
+
+Bad:
+
+```ts
+declare function sendInvoice(invoiceId: string): void;
+
+export function handleMessage(data: string): void {
+  sendInvoice(JSON.parse(data));
+}
+```
+
+Good:
+
+```ts
+declare function sendInvoice(invoiceId: string): void;
+
+export function handleMessage(data: string): void {
+  const invoiceId: unknown = JSON.parse(data);
+  if (typeof invoiceId !== 'string') {
+    throw new Error('Message has no invoice id');
+  }
+
+  sendInvoice(invoiceId);
+}
+```
+
+#### `typescript/no-misused-promises`
+
+No promise where a plain value or a `void` callback is expected, such as an async `onClick` handler or `if (promise)`. Needs `--type-aware`.
+
+**Why:** The caller ignores the returned promise, so a failure is lost and the code after it runs too early. It covers what `no-floating-promises` cannot see.
+
+Wrap the call: `() => { void save(); }`, or handle the error inside.
+
+Bad:
+
+```ts
+declare function save(): Promise<void>;
+
+export function listen(button: HTMLButtonElement): void {
+  button.addEventListener('click', async () => {
+    await save();
+  });
+}
+```
+
+Good:
+
+```ts
+declare function save(): Promise<void>;
+
+declare function showError(error: unknown): void;
+
+export function listen(button: HTMLButtonElement): void {
+  button.addEventListener('click', () => {
+    save().catch(showError);
+  });
+}
+```
+
+#### `typescript/no-deprecated`
+
+No use of anything marked `@deprecated`. Needs `--type-aware`.
+
+**Why:** A deprecated API is scheduled to go away. Catching it at lint time turns a future breaking upgrade into a small change now.
+
+Bad:
+
+```ts
+export function encode(text: string): string {
+  return escape(text);
+}
+```
+
+Good:
+
+```ts
+export function encode(text: string): string {
+  return encodeURIComponent(text);
 }
 ```
 
@@ -1155,9 +1415,17 @@ export function discountCents(cents: number, code: string): number {
 }
 ```
 
+### Turned off
+
+#### `typescript/consistent-return`
+
+Off, although the `suspicious` category turns it on.
+
+**Why:** It flags an exhaustive `switch` without a `default`, which is exactly what `switch-exhaustiveness-check` asks for.
+
 ## React rules
 
-Set in `react.json`, on top of `base.json` in React projects. It also turns on the correctness rules of the `react` and `jsx-a11y` plugins.
+Set in `react.json`, on top of `base.json` in React projects. It also turns on the `correctness`, `suspicious` and `perf` rules of the `react` and `jsx-a11y` plugins.
 
 ### Hooks
 
@@ -1419,6 +1687,114 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 ```
 
+#### `react/self-closing-comp`
+
+An element without children closes itself.
+
+**Why:** `<Spinner />` says there is nothing inside at a glance; `<Spinner></Spinner>` makes you look for children.
+
+Bad:
+
+```tsx
+export function Loading() {
+  return <div className="loading"></div>;
+}
+```
+
+Good:
+
+```tsx
+export function Loading() {
+  return <div className="loading" />;
+}
+```
+
+#### `react/jsx-no-useless-fragment`
+
+No fragment around a single child or around nothing.
+
+**Why:** A fragment only exists to group several children. Around one child it is noise that every reader has to look past.
+
+Bad:
+
+```tsx
+export function Title({ text }: { text: string }) {
+  return (
+    <>
+      <h1>{text}</h1>
+    </>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function Title({ text }: { text: string }) {
+  return <h1>{text}</h1>;
+}
+```
+
+#### `react/jsx-boolean-value`
+
+A `true` boolean prop is written by name only: `disabled`, not `disabled={true}`.
+
+**Why:** One way to write it, the same way HTML does.
+
+Bad:
+
+```tsx
+export function Submit() {
+  return (
+    <button type="submit" disabled={true}>
+      Save
+    </button>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function Submit() {
+  return (
+    <button type="submit" disabled>
+      Save
+    </button>
+  );
+}
+```
+
+#### `react/jsx-curly-brace-presence`
+
+No curly braces around a plain string prop or child: `title="Save"`, not `title={'Save'}`.
+
+**Why:** Braces signal an expression. Around a string literal they make a reader look for logic that is not there.
+
+Bad:
+
+```tsx
+export function Save() {
+  return (
+    <button type="button" title={'Save the draft'}>
+      {'Save'}
+    </button>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function Save() {
+  return (
+    <button type="button" title="Save the draft">
+      Save
+    </button>
+  );
+}
+```
+
 ### Forms
 
 #### `react/button-has-type`
@@ -1618,6 +1994,36 @@ export function SearchField() {
 }
 ```
 
+#### `jsx-a11y/anchor-ambiguous-text`
+
+No link text that means nothing on its own, such as "click here", "here", "link" or "more".
+
+**Why:** Screen reader users often jump through a list of links. Ten links called "click here" tell them nothing about where each one goes.
+
+Bad:
+
+```tsx
+export function Terms() {
+  return (
+    <p>
+      Read the terms <a href="/terms">here</a>.
+    </p>
+  );
+}
+```
+
+Good:
+
+```tsx
+export function Terms() {
+  return (
+    <p>
+      Read the <a href="/terms">terms of service</a>.
+    </p>
+  );
+}
+```
+
 #### `jsx-a11y/click-events-have-key-events`
 
 An element with `onClick` also handles the keyboard, with `onKeyDown`, `onKeyUp` or `onKeyPress`. Native buttons and links already do.
@@ -1678,6 +2084,20 @@ export function OrderRow({ name, onOpen }: { name: string; onOpen: () => void })
 }
 ```
 
+### Turned off
+
+#### `react/react-in-jsx-scope`
+
+Off, although the `suspicious` category turns it on.
+
+**Why:** The JSX transform since React 17 imports what it needs, so a file with JSX does not have to import `React`.
+
+#### `react/hooks`
+
+Off, although the `suspicious` category turns it on.
+
+**Why:** It checks the same hook calls as `react/rules-of-hooks`, so every mistake would be reported twice.
+
 ## Strict rules
 
 Set in `strict.json`, an opt-in layer on top of `base.json` for projects that want named exports, no barrel files and kebab-case file names.
@@ -1686,7 +2106,7 @@ Set in `strict.json`, an opt-in layer on top of `base.json` for projects that wa
 
 #### `import/no-default-export`
 
-Modules use named exports, never `export default`. Files that a tool requires to default-export, `*.config.*` and Storybook `*.stories.*`, are exempt.
+Modules use named exports, never `export default`. Files that a tool requires to default-export, `*.config.*`, Storybook `*.stories.*` and the files in `.storybook/`, are exempt.
 
 **Why:** A named export has one name everywhere, so search, rename and auto-import find every use. A default export is renamed by each file that imports it.
 

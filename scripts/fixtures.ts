@@ -33,8 +33,8 @@ function fixtureProblems(fixture: string): string[] {
   const problemsFound: string[] = [];
 
   for (const file of new Set([...expected.keys(), ...actual.keys()])) {
-    const want = [...(expected.get(file) ?? [])].sort();
-    const got = [...(actual.get(file) ?? [])].sort();
+    const want = [...(expected.get(file) ?? [])].toSorted();
+    const got = [...(actual.get(file) ?? [])].toSorted();
     if (want.join() !== got.join()) {
       problemsFound.push(`fixtures/${fixture}/${file}: expected [${want.join(', ')}], got [${got.join(', ')}]`);
     }
