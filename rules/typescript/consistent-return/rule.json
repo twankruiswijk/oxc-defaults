@@ -1,0 +1,5 @@
+{
+  "group": "Turned off",
+  "summary": "Off, although the `suspicious` category turns it on.",
+  "why": "It flags an exhaustive `switch` without a `default`, which is exactly what `switch-exhaustiveness-check` asks for."
+}

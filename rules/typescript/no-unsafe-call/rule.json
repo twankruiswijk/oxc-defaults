@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No calling a value typed `any`. Needs `--type-aware`.",
+  "why": "TypeScript cannot check a call on `any`: a missing function or wrong arguments only fail at runtime."
+}

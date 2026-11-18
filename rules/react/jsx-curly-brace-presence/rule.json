@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "No curly braces around a plain string prop or child: `title=\"Save\"`, not `title={'Save'}`.",
+  "why": "Braces signal an expression. Around a string literal they make a reader look for logic that is not there."
+}

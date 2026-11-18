@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No `any` value assigned to a variable, property or destructured name. Needs `--type-aware`.",
+  "why": "`no-explicit-any` stops you writing `any`, but `JSON.parse`, `catch` and untyped libraries still hand it to you. Assigning it spreads unchecked values through typed code."
+}

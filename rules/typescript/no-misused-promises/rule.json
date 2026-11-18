@@ -1,0 +1,6 @@
+{
+  "group": "Types",
+  "summary": "No promise where a plain value or a `void` callback is expected, such as an async `onClick` handler or `if (promise)`. Needs `--type-aware`.",
+  "why": "The caller ignores the returned promise, so a failure is lost and the code after it runs too early. It covers what `no-floating-promises` cannot see.",
+  "note": "Wrap the call: `() => { void save(); }`, or handle the error inside."
+}

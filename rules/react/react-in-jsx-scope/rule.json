@@ -1,0 +1,5 @@
+{
+  "group": "Turned off",
+  "summary": "Off, although the `suspicious` category turns it on.",
+  "why": "The JSX transform since React 17 imports what it needs, so a file with JSX does not have to import `React`."
+}

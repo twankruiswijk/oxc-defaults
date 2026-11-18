@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No passing a value typed `any` as an argument. Needs `--type-aware`.",
+  "why": "The parameter type looks checked, but an `any` argument skips the check, so the function receives values its type rules out."
+}

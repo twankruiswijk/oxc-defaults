@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No returning a value typed `any` from a typed function. Needs `--type-aware`.",
+  "why": "The return type promises a shape the function never checked, so callers trust a value that may be anything."
+}

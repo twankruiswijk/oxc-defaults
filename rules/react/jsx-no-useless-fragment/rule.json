@@ -1,0 +1,5 @@
+{
+  "group": "Components",
+  "summary": "No fragment around a single child or around nothing.",
+  "why": "A fragment only exists to group several children. Around one child it is noise that every reader has to look past."
+}

@@ -1,0 +1,5 @@
+{
+  "group": "Types",
+  "summary": "No reading a property of a value typed `any`. Needs `--type-aware`.",
+  "why": "Every property of `any` is `any` again, so a typo or a changed API is never caught."
+}

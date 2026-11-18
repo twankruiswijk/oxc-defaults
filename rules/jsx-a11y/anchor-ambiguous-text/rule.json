@@ -1,0 +1,5 @@
+{
+  "group": "Accessibility",
+  "summary": "No link text that means nothing on its own, such as \"click here\", \"here\", \"link\" or \"more\".",
+  "why": "Screen reader users often jump through a list of links. Ten links called \"click here\" tell them nothing about where each one goes."
+}

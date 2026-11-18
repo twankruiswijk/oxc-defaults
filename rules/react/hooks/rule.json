@@ -1,0 +1,5 @@
+{
+  "group": "Turned off",
+  "summary": "Off, although the `suspicious` category turns it on.",
+  "why": "It checks the same hook calls as `react/rules-of-hooks`, so every mistake would be reported twice."
+}
